@@ -15,6 +15,7 @@
         <ResourceDictionary>
             <Style x:Key="BaseStyle" TargetType="Element">
                 <Setter Property="Shell.BackgroundColor" Value="{StaticResource Primary}" />
+                <!--
                 <Setter Property="Shell.ForegroundColor" Value="White" />
                 <Setter Property="Shell.TitleColor" Value="White" />
                 <Setter Property="Shell.DisabledColor" Value="#B4FFFFFF" />
@@ -23,6 +24,15 @@
                 <Setter Property="Shell.TabBarForegroundColor" Value="White"/>
                 <Setter Property="Shell.TabBarUnselectedColor" Value="#95FFFFFF"/>
                 <Setter Property="Shell.TabBarTitleColor" Value="White"/>
+                -->
+                <Setter Property="Shell.ForegroundColor" Value="{StaticResource Secondary}" />
+                <Setter Property="Shell.TitleColor" Value="{StaticResource Secondary}" />
+                <Setter Property="Shell.DisabledColor" Value="{StaticResource SecondaryDisabled}" />
+                <Setter Property="Shell.UnselectedColor" Value="{StaticResource Secondary}" />
+                <Setter Property="Shell.TabBarBackgroundColor" Value="{StaticResource Primary}" />
+                <Setter Property="Shell.TabBarForegroundColor" Value="{StaticResource Secondary}"/>
+                <Setter Property="Shell.TabBarUnselectedColor" Value="{StaticResource SecondaryUnselected}"/>
+                <Setter Property="Shell.TabBarTitleColor" Value="White"/>
             </Style>
             <Style TargetType="TabBar" BasedOn="{StaticResource BaseStyle}" />
             <Style TargetType="FlyoutItem" BasedOn="{StaticResource BaseStyle}" />
@@ -30,7 +40,8 @@
     </Shell.Resources>
 
     <TabBar>
-        <ShellContent Title="New" Icon="icon_add.png" Route="AboutPage" ContentTemplate="{DataTemplate local:AboutPage}" />
+        <ShellContent Title="Edit" Icon="icon_add.png" Route="EditPage" ContentTemplate="{DataTemplate local:EditPage}" />
+        <ShellContent Title="Home" Icon="icon_home.png" Route="AboutPage" ContentTemplate="{DataTemplate local:AboutPage}" />
         <ShellContent Title="Latest" Icon="icon_gallery.png" ContentTemplate="{DataTemplate local:ItemsPage}" />
     </TabBar>
 

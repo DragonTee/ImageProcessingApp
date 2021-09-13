@@ -4,10 +4,16 @@
              x:Class="ImageProcessingApp.App">
     <!--
         Define global resources and styles here, that apply to all pages in your app.
+            <Color x:Key="Secondary">#e6cf85</Color>
+            <Color x:Key="SecondaryDisabled">#c6bf75</Color>
+            <Color x:Key="Primary">#281400</Color>
     -->
     <Application.Resources>
         <ResourceDictionary>
-            <Color x:Key="Primary">#2196F3</Color>
+            <Color x:Key="Primary">#2e3757</Color>
+            <Color x:Key="SecondaryDisabled">#ccd0c2</Color>
+            <Color x:Key="Secondary">#cdd0d3</Color>
+            <Color x:Key="SecondaryUnselected">#c0d0d0</Color>
             <Style TargetType="Button">
                 <Setter Property="TextColor" Value="White"></Setter>
                 <Setter Property="VisualStateManager.VisualStateGroups">
@@ -20,7 +26,8 @@
                             </VisualState>
                             <VisualState x:Name="Disabled">
                                 <VisualState.Setters>
-                                    <Setter Property="BackgroundColor" Value="#332196F3" />
+                                    <Setter Property="BackgroundColor" Value="{StaticResource Secondary}" />
+                                    <!--<Setter Property="BackgroundColor" Value="#332196F3" />-->
                                 </VisualState.Setters>
                             </VisualState>
                         </VisualStateGroup>
