@@ -40,7 +40,7 @@
     </Shell.Resources>
 
     <TabBar>
-        <ShellContent Title="Edit" Icon="icon_add.png" Route="EditPage" ContentTemplate="{DataTemplate local:EditPage}" />
+        <ShellContent Title="Edit" Icon="icon_edit.png" Route="EditPage" ContentTemplate="{DataTemplate local:EditPage}" />
         <ShellContent Title="Home" Icon="icon_home.png" Route="AboutPage" ContentTemplate="{DataTemplate local:AboutPage}" />
         <ShellContent Title="Latest" Icon="icon_gallery.png" ContentTemplate="{DataTemplate local:ItemsPage}" />
     </TabBar>

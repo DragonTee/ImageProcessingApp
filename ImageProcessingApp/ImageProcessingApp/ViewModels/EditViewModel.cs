@@ -25,6 +25,13 @@ namespace ImageProcessingApp.ViewModels
             set => SetProperty(ref image, value);
         }
 
+        private SKBitmap bitmap;
+        public SKBitmap Bitmap
+        {
+            get => bitmap;
+            set => SetProperty(ref bitmap, value);
+        }
+
         public EditViewModel()
         {
             Title = "Edit Image";
@@ -35,7 +42,7 @@ namespace ImageProcessingApp.ViewModels
         public ICommand TakePhoto { get; }
         public ICommand PickPhoto { get; }
 
-        async Task TakePhotoAsync()
+        private async Task TakePhotoAsync()
         {
             try
             {
@@ -88,10 +95,10 @@ namespace ImageProcessingApp.ViewModels
             if (Device.RuntimePlatform == Device.iOS)
                 t.Transform(new RotateTransformation(90));
             var imageStream = await t.AsPNGStreamAsync();*/
-
-            Console.WriteLine("1----------");
+            SKManagedStream stream = new SKManagedStream(await photo.OpenReadAsync());
+            SKCodec codec = SKCodec.Create(stream);
             SKBitmap bitmap = SKBitmap.Decode(await photo.OpenReadAsync());
-            Console.WriteLine("2----------");
+            bitmap = AutoOrient(bitmap, codec.EncodedOrigin);
 
             IntPtr pixelsAddr = bitmap.GetPixels();
             Stopwatch stopwatch = new Stopwatch();
@@ -130,16 +137,47 @@ namespace ImageProcessingApp.ViewModels
             }*/
             Console.WriteLine($"Photo filtering time: {stopwatch.ElapsedMilliseconds} ms");
 
-            var image = SKImage.FromBitmap(bitmap);
-            var data = image.Encode();
-            var stream = data.AsStream();
-
-            Image = ImageSource.FromStream(() => stream);
-            Console.WriteLine("PhotoLoaded");
+            Bitmap = bitmap;
+            return;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         uint MakePixel(byte red, byte green, byte blue, byte alpha) =>
             (uint)((alpha << 24) | (blue << 16) | (green << 8) | red);
+
+        private static SKBitmap AutoOrient(SKBitmap bitmap, SKEncodedOrigin origin)
+        {
+            SKBitmap rotated;
+            switch (origin)
+            {
+                case SKEncodedOrigin.BottomRight:
+                    using (var surface = new SKCanvas(bitmap))
+                    {
+                        surface.RotateDegrees(180, bitmap.Width / 2, bitmap.Height / 2);
+                        surface.DrawBitmap(bitmap.Copy(), 0, 0);
+                    }
+                    return bitmap;
+                case SKEncodedOrigin.RightTop:
+                    rotated = new SKBitmap(bitmap.Height, bitmap.Width);
+                    using (var surface = new SKCanvas(rotated))
+                    {
+                        surface.Translate(rotated.Width, 0);
+                        surface.RotateDegrees(90);
+                        surface.DrawBitmap(bitmap, 0, 0);
+                    }
+                    return rotated;
+                case SKEncodedOrigin.LeftBottom:
+                    rotated = new SKBitmap(bitmap.Height, bitmap.Width);
+                    using (var surface = new SKCanvas(rotated))
+                    {
+                        surface.Translate(0, rotated.Height);
+                        surface.RotateDegrees(270);
+                        surface.DrawBitmap(bitmap, 0, 0);
+                    }
+                    return rotated;
+                default:
+                    return bitmap;
+            }
+        }
     }
 }
