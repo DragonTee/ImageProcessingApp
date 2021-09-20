@@ -19,25 +19,41 @@ namespace ImageProcessingApp.Views
             InitializeComponent();
         }
 
+        protected override void OnBindingContextChanged()
+        {
+            base.OnBindingContextChanged();
+            Console.WriteLine("BindingContextChanged");
+        }
+
         private void OnCanvasViewPaintSurface(object sender, SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs args)
         {            
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;
-            SKCanvas canvas = surface.Canvas;            
+            SKCanvas canvas = surface.Canvas;
 
             EditViewModel model = (EditViewModel)this.BindingContext;
             
             args.Surface.Canvas.Clear();
-            if (model.Bitmap != null)
+            if (model.BitmapProcessed != null)
             {
-                var bitmap = model.Bitmap;
+                var bitmap = model.BitmapProcessed;
                 var bitmapInfo = bitmap.Info;
                 float c = bitmapInfo.Height * 1.0f / bitmapInfo.Width;
-                info.Height = (int)Math.Round(info.Width * c);
+                var newHeight = (int)Math.Round(info.Width * c);
+
+                if (newHeight > info.Height)
+                {
+                    info.Width = (int)Math.Round(info.Height / c);
+                }
+                else
+                {
+                    info.Height = newHeight;
+                }
 
                 canvas.Clear();
-                canvas.DrawBitmap(model.Bitmap, info.Rect);
+                canvas.DrawBitmap(model.BitmapProcessed, info.Rect);
             }
+            Console.WriteLine("Validating canvas");
         }
 
         

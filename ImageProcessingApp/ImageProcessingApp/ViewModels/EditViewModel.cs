@@ -25,22 +25,57 @@ namespace ImageProcessingApp.ViewModels
             set => SetProperty(ref image, value);
         }
 
-        private SKBitmap bitmap;
-        public SKBitmap Bitmap
+        private bool imageLoaded = false;
+        public bool ImageLoaded
         {
-            get => bitmap;
-            set => SetProperty(ref bitmap, value);
+            get => imageLoaded;
+            set => SetProperty(ref imageLoaded, value);
+        }
+
+        private SKBitmap bitmapLoaded;
+        public SKBitmap BitmapLoaded
+        {
+            get => bitmapLoaded;
+            set => SetProperty(ref bitmapLoaded, value);
+        }
+
+        private SKBitmap bitmapProcessed;
+        public SKBitmap BitmapProcessed
+        {
+            get => bitmapProcessed;
+            set => SetProperty(ref bitmapProcessed, value);
         }
 
         public EditViewModel()
         {
             Title = "Edit Image";
-            TakePhoto = new Command(() => MainThread.BeginInvokeOnMainThread(async() => await TakePhotoAsync()));
-            PickPhoto = new Command(() => MainThread.BeginInvokeOnMainThread(async() => await PickPhotoAsync()));
+            TakePhoto = new Command(() => MainThread.BeginInvokeOnMainThread(async () => await TakePhotoAsync()));
+            PickPhoto = new Command(() => MainThread.BeginInvokeOnMainThread(async () => await PickPhotoAsync()));
+            Pasterize = new Command(() => MainThread.BeginInvokeOnMainThread(async () => await PasterizeBitmap()));
+            Grayscale = new Command(() => MainThread.BeginInvokeOnMainThread(async () => await GrayscaleBitmap()));
+            ResetImage = new Command(() => ResetBitmapImage());
         }
 
+        public ICommand ResetImage { get; }
+        public ICommand RestoreImage { get; }
         public ICommand TakePhoto { get; }
         public ICommand PickPhoto { get; }
+        public ICommand Pasterize { get; }
+        public ICommand Grayscale { get; }
+
+        private void RestoreBitmapImage()
+        {
+            BitmapProcessed = BitmapLoaded.Copy();
+        }
+
+        private void ResetBitmapImage()
+        {
+            BitmapLoaded.Dispose();
+            BitmapProcessed.Dispose();
+            BitmapLoaded = null;
+            BitmapProcessed = null;
+            ImageLoaded = false;
+        }
 
         private async Task TakePhotoAsync()
         {
@@ -51,11 +86,11 @@ namespace ImageProcessingApp.ViewModels
             }
             catch (FeatureNotSupportedException fnsEx)
             {
-                // Feature is not supported on the device
+                Console.WriteLine($"CapturePhotoAsync THREW FeatureNotSupportedException: {fnsEx.Message}");
             }
             catch (PermissionException pEx)
             {
-                // Permissions not granted
+                Console.WriteLine($"CapturePhotoAsync THREW PermissionException: {pEx.Message}");
             }
             catch (Exception ex)
             {
@@ -63,7 +98,7 @@ namespace ImageProcessingApp.ViewModels
             }
         }
 
-        async Task PickPhotoAsync()
+        private async Task PickPhotoAsync()
         {
             try
             {
@@ -72,15 +107,15 @@ namespace ImageProcessingApp.ViewModels
             }
             catch (FeatureNotSupportedException fnsEx)
             {
-                // Feature is not supported on the device
+                Console.WriteLine($"PickPhotoAsync THREW FeatureNotSupportedException: {fnsEx.Message}");
             }
             catch (PermissionException pEx)
             {
-                // Permissions not granted
+                Console.WriteLine($"PickPhotoAsync THREW PermissionException: {pEx.Message}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"CapturePhotoAsync THREW: {ex.Message}");
+                Console.WriteLine($"PickPhotoAsync THREW: {ex.Message}");
             }
         }
 
@@ -90,55 +125,59 @@ namespace ImageProcessingApp.ViewModels
             {
                 return;
             }
-            /*var t = ImageService.Instance.LoadStream(async c => await photo.OpenReadAsync());
-
-            if (Device.RuntimePlatform == Device.iOS)
-                t.Transform(new RotateTransformation(90));
-            var imageStream = await t.AsPNGStreamAsync();*/
             SKManagedStream stream = new SKManagedStream(await photo.OpenReadAsync());
             SKCodec codec = SKCodec.Create(stream);
             SKBitmap bitmap = SKBitmap.Decode(await photo.OpenReadAsync());
             bitmap = AutoOrient(bitmap, codec.EncodedOrigin);
-
-            IntPtr pixelsAddr = bitmap.GetPixels();
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Restart();
-
-            unsafe
-            {
-                uint* ptr = (uint*)bitmap.GetPixels().ToPointer();
-                int pixelCount = bitmap.Width * bitmap.Height;
-
-                for (int i = 0; i < pixelCount; i++)
-                {
-                    *ptr++ &= 0xE0E0E0FF;
-                }
-            }
-            /*
-            unsafe
-            {
-                byte* ptr = (byte*)pixelsAddr.ToPointer();
-
-                for (int row = 0; row < bitmap.Height; row++)
-                    for (int col = 0; col < bitmap.Width; col++)
-                    {
-                        var r = *ptr;
-                        var g = *(ptr+1);
-                        var b = *(ptr+2);
-                        var brightest = r > g ? r : g;
-                        brightest = brightest > b ? brightest : b;
-                        *ptr++ = brightest;
-                        *ptr++ = brightest;
-                        *ptr++ = brightest;
-                        *ptr++ = 0xFF;
-                        //*ptr
-                        //*ptr++ = MakePixel((byte)(col%255), 0, (byte)(row%255), 0xFF);
-                    }
-            }*/
-            Console.WriteLine($"Photo filtering time: {stopwatch.ElapsedMilliseconds} ms");
-
-            Bitmap = bitmap;
+            BitmapLoaded = bitmap;
+            BitmapProcessed = BitmapLoaded.Copy();
+            ImageLoaded = true;
             return;
+        }
+
+        private async Task PasterizeBitmap()
+        {
+            await Task.Run(() =>
+            {
+                SKBitmap bitmapNew = new SKBitmap(BitmapLoaded.Width, BitmapLoaded.Height);
+                unsafe
+                {
+                    uint* ptrIn = (uint*)BitmapLoaded.GetPixels().ToPointer();
+                    uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
+                    int pixelCount = BitmapLoaded.Width * BitmapLoaded.Height;
+
+                    for (int i = 0; i < pixelCount; i++)
+                    {
+                        *ptrOut++ = *ptrIn++ & 0xE0E0E0FF;
+                    }
+                }
+                BitmapProcessed = bitmapNew;
+            });
+        }
+
+        private async Task GrayscaleBitmap()
+        {
+            var watch = new Stopwatch();
+            watch.Restart();
+            await Task.Run(() =>
+            {
+                SKBitmap bitmapNew = new SKBitmap(BitmapLoaded.Width, BitmapLoaded.Height);
+                unsafe
+                {
+                    uint* ptrIn = (uint*)BitmapLoaded.GetPixels().ToPointer();
+                    uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
+                    int pixelCount = BitmapLoaded.Width * BitmapLoaded.Height;
+
+                    for (int i = 0; i < pixelCount; i++)
+                    {
+                        byte value = (byte)((*ptrIn & 255) * 3 / 10 + ((*ptrIn >> 8) & 255) * 59 / 100 + ((*ptrIn >> 16) & 255) * 11 / 100);
+                        ptrIn++;
+                        *ptrOut++ = MakePixel(value, value, value, 255);
+                    }
+                }
+                BitmapProcessed = bitmapNew;
+            });
+            Console.WriteLine("Image grayscaled in " + watch.ElapsedMilliseconds + " ms, processed " + BitmapLoaded.Width * BitmapLoaded.Height + " pixels");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -4,22 +4,40 @@
              xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
              x:Class="ImageProcessingApp.Views.EditPage"
              Title="{Binding Title}"
-             xmlns:vm="clr-namespace:ImageProcessingApp.ViewModels">
+             xmlns:local="clr-namespace:ImageProcessingApp.Controls;assembly=ImageProcessingApp"
+             xmlns:vm="clr-namespace:ImageProcessingApp.ViewModels"
+             xmlns:Helpers="clr-namespace:ImageProcessingApp.Helpers">
     <ContentPage.BindingContext>
         <vm:EditViewModel/>
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <ScrollView>
-            <StackLayout Padding="10">
-                <Button Text="Pick Image" Command="{Binding PickPhoto}"/>
-                <Button Text="Take Photo" Command="{Binding TakePhoto}"/>
-                <!--Image Source="{Binding Image}"/-->
-                <skia:SKCanvasView x:Name="canvasView"
-                    VerticalOptions="FillAndExpand"
-                    PaintSurface="OnCanvasViewPaintSurface"
-                    />
+        <FlexLayout Direction="Column">
 
-            </StackLayout>
-        </ScrollView>
+            <!-- Header -->
+            <Button Text="Pick Image" Command="{Binding PickPhoto}" IsVisible="{Binding ImageLoaded, Converter={Helpers:InverseBoolConverter}}"/>
+            <Button Text="Take Photo" Command="{Binding TakePhoto}" IsVisible="{Binding ImageLoaded, Converter={Helpers:InverseBoolConverter}}"/>
+            <Button Text="Back" Command="{Binding ResetImage}" IsVisible="{Binding ImageLoaded}"/>
+            <!-- Content -->
+            <!--<local:CustomSKCanvas x:Name="canvasView"
+                PaintSurface="OnCanvasViewPaintSurface"
+                    FlexLayout.Grow="1" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand"/>-->
+            <local:PinchToZoomContainer FlexLayout.Grow="1" IsVisible="{Binding ImageLoaded}">
+                <local:PinchToZoomContainer.Content>
+                    <local:BitmapCanvas x:Name="canvasView"
+                PaintSurface="OnCanvasViewPaintSurface"
+                Bitmap="{Binding BitmapProcessed}"/>
+                </local:PinchToZoomContainer.Content>
+            </local:PinchToZoomContainer>
+
+            <!-- Footer -->
+            <ScrollView Margin="10" Orientation="Horizontal" IsVisible="{Binding ImageLoaded}">
+                <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                    <ImageButton Source="icon_add.png" 
+                    BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Pasterize}"/>
+                    <ImageButton Source="icon_home.png" 
+                    BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Grayscale}"/>
+                </StackLayout>
+            </ScrollView>
+        </FlexLayout>
     </ContentPage.Content>
 </ContentPage>
