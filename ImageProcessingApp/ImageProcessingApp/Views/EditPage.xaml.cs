@@ -56,6 +56,9 @@ namespace ImageProcessingApp.Views
             Console.WriteLine("Validating canvas");
         }
 
-        
+        private void Slider_ValueChanged(object sender, ValueChangedEventArgs e)
+        {
+            var model = BindingContext;
+        }
     }
 }

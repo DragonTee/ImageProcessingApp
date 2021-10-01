@@ -11,8 +11,7 @@
         <vm:EditViewModel/>
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <FlexLayout Direction="Column">
-
+        <FlexLayout Direction="Column" BackgroundColor="{StaticResource Primary}">
             <!-- Header -->
             <Button Text="Pick Image" Command="{Binding PickPhoto}" IsVisible="{Binding ImageLoaded, Converter={Helpers:InverseBoolConverter}}"/>
             <Button Text="Take Photo" Command="{Binding TakePhoto}" IsVisible="{Binding ImageLoaded, Converter={Helpers:InverseBoolConverter}}"/>
@@ -21,7 +20,7 @@
             <!--<local:CustomSKCanvas x:Name="canvasView"
                 PaintSurface="OnCanvasViewPaintSurface"
                     FlexLayout.Grow="1" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand"/>-->
-            <local:PinchToZoomContainer FlexLayout.Grow="1" IsVisible="{Binding ImageLoaded}">
+            <local:PinchToZoomContainer FlexLayout.Grow="1" IsVisible="{Binding ImageLoaded}" IsClippedToBounds="True">
                 <local:PinchToZoomContainer.Content>
                     <local:BitmapCanvas x:Name="canvasView"
                 PaintSurface="OnCanvasViewPaintSurface"
@@ -30,12 +29,36 @@
             </local:PinchToZoomContainer>
 
             <!-- Footer -->
+            <StackLayout Margin="10" HeightRequest="30" Orientation="Horizontal" IsVisible="{Binding SliderNeeded}">
+                <Slider HorizontalOptions="FillAndExpand" HeightRequest="20" Minimum="0" Maximum="1" Value="{Binding SliderValue}" ValueChanged="Slider_ValueChanged"/>
+            </StackLayout>
             <ScrollView Margin="10" Orientation="Horizontal" IsVisible="{Binding ImageLoaded}">
                 <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
-                    <ImageButton Source="icon_add.png" 
-                    BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Pasterize}"/>
-                    <ImageButton Source="icon_home.png" 
-                    BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Grayscale}"/>
+                    <FlexLayout Direction="Column" HeightRequest="70">
+                        <ImageButton Source="icon_home.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding RestoreImage}"/>
+                        <Label Text="Original" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                    </FlexLayout>
+                    <FlexLayout Direction="Column" HeightRequest="70">
+                        <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Pasterize}"/>
+                        <Label Text="Pasterize" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                    </FlexLayout>
+                    <FlexLayout Direction="Column" HeightRequest="70">
+                        <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Grayscale}"/>
+                        <Label Text="Grayscale" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                    </FlexLayout>
+                    <FlexLayout Direction="Column" HeightRequest="70">
+                        <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Invert}"/>
+                        <Label Text="Invert" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                    </FlexLayout>
+                    <FlexLayout Direction="Column" HeightRequest="70">
+                        <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Binarize}"/>
+                        <Label Text="Binarize" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                    </FlexLayout>
                 </StackLayout>
             </ScrollView>
         </FlexLayout>

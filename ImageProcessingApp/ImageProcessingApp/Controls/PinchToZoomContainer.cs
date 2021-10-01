@@ -9,7 +9,7 @@ namespace ImageProcessingApp.Controls
     public class PinchToZoomContainer : ContentView
     {
         private double startScale, currentScale, xOffset = 0, yOffset = 0;
-        private const double panOvershoot = 0.5;
+        private const double panOvershoot = 0.15;
 
         public PinchToZoomContainer()
         {
@@ -95,7 +95,7 @@ namespace ImageProcessingApp.Controls
                     var minTranslationX = -Content.Width * (currentScale - 1);
                     var minTranslationY = -Content.Height * (currentScale - 1);
                     if (Content.TranslationX < minTranslationX || Content.TranslationX > 0 || Content.TranslationY < minTranslationY || Content.TranslationY > 0)
-                        Content.TranslateTo(Content.TranslationX.Clamp(minTranslationX, 0), Content.TranslationY.Clamp(minTranslationY, 0), 250, Easing.SpringOut);
+                        Content.TranslateTo(Content.TranslationX.Clamp(minTranslationX, 0), Content.TranslationY.Clamp(minTranslationY, 0), 250, Easing.CubicOut);
                     break;
             }
         }

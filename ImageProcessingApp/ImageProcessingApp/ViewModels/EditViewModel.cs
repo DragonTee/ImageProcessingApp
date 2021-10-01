@@ -19,8 +19,29 @@ namespace ImageProcessingApp.ViewModels
 {
     public class EditViewModel : BaseViewModel
     {
+        private static readonly object bitmapLock = new object();
+
+        private bool sliderNeeded = false;
+        public bool SliderNeeded
+        {
+            get => sliderNeeded;
+            set => SetProperty(ref sliderNeeded, value);
+        }
+
+        private float sliderValue;
+        public float SliderValue
+        {
+            get => sliderValue;
+            set
+            {
+                MainThread.BeginInvokeOnMainThread(async () => await BinarizeBitmap());
+                SetProperty(ref sliderValue, value);                
+            }
+        }
+
         private ImageSource image;
-        public ImageSource Image { 
+        public ImageSource Image 
+        { 
             get => image;
             set => SetProperty(ref image, value);
         }
@@ -30,6 +51,13 @@ namespace ImageProcessingApp.ViewModels
         {
             get => imageLoaded;
             set => SetProperty(ref imageLoaded, value);
+        }
+
+        private bool effectSelected = false;
+        public bool EffectSelected
+        {
+            get => effectSelected;
+            set => SetProperty(ref effectSelected, value);
         }
 
         private SKBitmap bitmapLoaded;
@@ -46,13 +74,18 @@ namespace ImageProcessingApp.ViewModels
             set => SetProperty(ref bitmapProcessed, value);
         }
 
+        private SKBitmap bitmapGrayscaled;
+
         public EditViewModel()
         {
             Title = "Edit Image";
             TakePhoto = new Command(() => MainThread.BeginInvokeOnMainThread(async () => await TakePhotoAsync()));
             PickPhoto = new Command(() => MainThread.BeginInvokeOnMainThread(async () => await PickPhotoAsync()));
-            Pasterize = new Command(() => MainThread.BeginInvokeOnMainThread(async () => await PasterizeBitmap()));
-            Grayscale = new Command(() => MainThread.BeginInvokeOnMainThread(async () => await GrayscaleBitmap()));
+            Pasterize = new Command(async () => await PasterizeBitmap());
+            Grayscale = new Command(async () => await GrayscaleBitmap());
+            Binarize = new Command(async () => await BinarizeBitmap());
+            Invert = new Command(async () => await InvertBitmap());
+            RestoreImage = new Command(() => RestoreBitmapImage());
             ResetImage = new Command(() => ResetBitmapImage());
         }
 
@@ -62,19 +95,26 @@ namespace ImageProcessingApp.ViewModels
         public ICommand PickPhoto { get; }
         public ICommand Pasterize { get; }
         public ICommand Grayscale { get; }
+        public ICommand Invert { get; }
+        public ICommand Binarize { get; }
 
         private void RestoreBitmapImage()
         {
+            EffectSelected = false;
             BitmapProcessed = BitmapLoaded.Copy();
         }
 
         private void ResetBitmapImage()
         {
+            EffectSelected = false;
             BitmapLoaded.Dispose();
             BitmapProcessed.Dispose();
+            bitmapGrayscaled.Dispose();
+            bitmapGrayscaled = null;
             BitmapLoaded = null;
             BitmapProcessed = null;
             ImageLoaded = false;
+            SliderNeeded = false;
         }
 
         private async Task TakePhotoAsync()
@@ -132,6 +172,8 @@ namespace ImageProcessingApp.ViewModels
             BitmapLoaded = bitmap;
             BitmapProcessed = BitmapLoaded.Copy();
             ImageLoaded = true;
+            SliderNeeded = false;
+            await InitializeGrayscaledBitmap();
             return;
         }
 
@@ -139,45 +181,124 @@ namespace ImageProcessingApp.ViewModels
         {
             await Task.Run(() =>
             {
-                SKBitmap bitmapNew = new SKBitmap(BitmapLoaded.Width, BitmapLoaded.Height);
-                unsafe
+                lock (bitmapLock)
                 {
-                    uint* ptrIn = (uint*)BitmapLoaded.GetPixels().ToPointer();
-                    uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
-                    int pixelCount = BitmapLoaded.Width * BitmapLoaded.Height;
-
-                    for (int i = 0; i < pixelCount; i++)
+                    SKBitmap bitmapNew = new SKBitmap(BitmapLoaded.Width, BitmapLoaded.Height);
+                    unsafe
                     {
-                        *ptrOut++ = *ptrIn++ & 0xE0E0E0FF;
+                        uint* ptrIn = (uint*)BitmapLoaded.GetPixels().ToPointer();
+                        uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
+                        int pixelCount = BitmapLoaded.Width * BitmapLoaded.Height;
+
+                        for (int i = 0; i < pixelCount; i++)
+                        {
+                            *ptrOut++ = *ptrIn++ & 0xE0E0E0FF;
+                        }
                     }
+                    bitmapProcessed.Dispose();
+                    BitmapProcessed = bitmapNew;
+                    EffectSelected = true;
+                    SliderNeeded = false;
                 }
-                BitmapProcessed = bitmapNew;
+            });
+        }
+
+        private async Task InitializeGrayscaledBitmap()
+        {
+            await Task.Run(() =>
+            {
+                lock (bitmapLock)
+                {
+                    SKBitmap bitmapNew = new SKBitmap(BitmapLoaded.Width, BitmapLoaded.Height);
+                    unsafe
+                    {
+                        uint* ptrIn = (uint*)BitmapLoaded.GetPixels().ToPointer();
+                        uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
+                        int pixelCount = BitmapLoaded.Width * BitmapLoaded.Height;
+
+                        for (int i = 0; i < pixelCount; i++)
+                        {
+                            byte value = (byte)((*ptrIn & 255) * 3 / 10 + ((*ptrIn >> 8) & 255) * 59 / 100 + ((*ptrIn >> 16) & 255) * 11 / 100);
+                            ptrIn++;
+                            *ptrOut++ = MakePixel(value, value, value, 255);
+                        }
+                    }
+                    if (bitmapGrayscaled != null)
+                        bitmapGrayscaled.Dispose();
+                    bitmapGrayscaled = bitmapNew;
+                }
+            });
+        }
+
+        private async Task BinarizeBitmap()
+        {
+            await Task.Run(() =>
+            {
+                lock (bitmapLock)
+                {
+                    SKBitmap bitmapNew = new SKBitmap(bitmapGrayscaled.Width, bitmapGrayscaled.Height);
+                    unsafe
+                    {
+                        byte binarizationTheshold = (byte)Convert.ToInt32(Math.Min(0, 255 * sliderValue));
+                        uint* ptrIn = (uint*)bitmapGrayscaled.GetPixels().ToPointer();
+                        uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
+                        int pixelCount = bitmapGrayscaled.Width * bitmapGrayscaled.Height;
+
+                        for (int i = 0; i < pixelCount; i++)
+                        {
+                            byte value = (byte)((*ptrIn & 255) > binarizationTheshold ? 255 : 0);
+                            ptrIn++;
+                            *ptrOut++ = MakePixel(value, value, value, 255);
+                        }
+                    }
+                    BitmapProcessed.Dispose();
+                    BitmapProcessed = bitmapNew;
+                    SliderNeeded = true;
+                }
+            });
+        }
+
+        private async Task InvertBitmap()
+        {
+            await Task.Run(() =>
+            {
+                lock (bitmapLock)
+                {
+                    SKBitmap bitmapNew = new SKBitmap(bitmapLoaded.Width, bitmapLoaded.Height);
+                    unsafe
+                    {
+                        uint* ptrIn = (uint*)bitmapLoaded.GetPixels().ToPointer();
+                        uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
+                        int pixelCount = bitmapGrayscaled.Width * bitmapGrayscaled.Height;
+
+                        for (int i = 0; i < pixelCount; i++)
+                        {
+                            byte r = (byte)(255 - (*ptrIn & 255));
+                            byte g = (byte)(255 - ((*ptrIn >> 8) & 255));
+                            byte b = (byte)(255 - ((*ptrIn >> 16) & 255));
+                            ptrIn++;
+                            *ptrOut++ = MakePixel(r, g, b, 255);
+                        }
+                    }
+                    BitmapProcessed.Dispose();
+                    BitmapProcessed = bitmapNew;
+                    SliderNeeded = false;
+                }
             });
         }
 
         private async Task GrayscaleBitmap()
         {
-            var watch = new Stopwatch();
-            watch.Restart();
             await Task.Run(() =>
             {
-                SKBitmap bitmapNew = new SKBitmap(BitmapLoaded.Width, BitmapLoaded.Height);
-                unsafe
+                lock (bitmapLock)
                 {
-                    uint* ptrIn = (uint*)BitmapLoaded.GetPixels().ToPointer();
-                    uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
-                    int pixelCount = BitmapLoaded.Width * BitmapLoaded.Height;
-
-                    for (int i = 0; i < pixelCount; i++)
-                    {
-                        byte value = (byte)((*ptrIn & 255) * 3 / 10 + ((*ptrIn >> 8) & 255) * 59 / 100 + ((*ptrIn >> 16) & 255) * 11 / 100);
-                        ptrIn++;
-                        *ptrOut++ = MakePixel(value, value, value, 255);
-                    }
+                    bitmapProcessed.Dispose();
+                    BitmapProcessed = bitmapGrayscaled.Copy();
+                    EffectSelected = true;
+                    SliderNeeded = false;
                 }
-                BitmapProcessed = bitmapNew;
             });
-            Console.WriteLine("Image grayscaled in " + watch.ElapsedMilliseconds + " ms, processed " + BitmapLoaded.Width * BitmapLoaded.Height + " pixels");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
