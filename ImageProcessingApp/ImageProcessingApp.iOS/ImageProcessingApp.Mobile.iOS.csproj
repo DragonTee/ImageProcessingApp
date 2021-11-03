@@ -132,14 +132,17 @@
     <Reference Include="System.Numerics.Vectors" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DevExpress.XamarinForms.Charts">
+      <Version>21.1.6</Version>
+    </PackageReference>
     <PackageReference Include="Xamarin.Forms" Version="5.0.0.2012" />
     <PackageReference Include="Xamarin.Essentials" Version="1.6.1" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\ImageProcessingApp\ImageProcessingApp.csproj">
-      <Project>{9EDF3CC3-38D9-499B-9675-E66CB85D0B07}</Project>
-      <Name>ImageProcessingApp</Name>
+    <ProjectReference Include="..\ImageProcessingApp\ImageProcessingApp.Mobile.csproj">
+      <Project>{E60A3AF9-E4C3-4F15-971E-92E522FD38E3}</Project>
+      <Name>ImageProcessingApp.Mobile</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>

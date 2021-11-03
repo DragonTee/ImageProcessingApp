@@ -27,6 +27,8 @@ namespace ImageProcessingApp.iOS
             App.ScreenWidth = UIScreen.MainScreen.Bounds.Width;
             App.ScreenHeight = UIScreen.MainScreen.Bounds.Height;
 
+            DevExpress.XamarinForms.Charts.iOS.Initializer.Init();
+
             LoadApplication(new App());
 
             return base.FinishedLaunching(app, options);

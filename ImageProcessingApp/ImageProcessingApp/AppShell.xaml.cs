@@ -10,6 +10,7 @@ namespace ImageProcessingApp
     {
         public AppShell()
         {
+            DevExpress.XamarinForms.Charts.Initializer.Init();
             InitializeComponent();
             Routing.RegisterRoute(nameof(ItemDetailPage), typeof(ItemDetailPage));
             Routing.RegisterRoute(nameof(NewItemPage), typeof(NewItemPage));

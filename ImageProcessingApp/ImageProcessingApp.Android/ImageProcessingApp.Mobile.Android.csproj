@@ -87,9 +87,9 @@
     <AndroidResource Include="Resources\drawable\icon_feed.png" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\ImageProcessingApp\ImageProcessingApp.csproj">
-      <Project>{9EDF3CC3-38D9-499B-9675-E66CB85D0B07}</Project>
-      <Name>ImageProcessingApp</Name>
+    <ProjectReference Include="..\ImageProcessingApp\ImageProcessingApp.Mobile.csproj">
+      <Project>{E60A3AF9-E4C3-4F15-971E-92E522FD38E3}</Project>
+      <Name>ImageProcessingApp.Mobile</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

@@ -239,7 +239,7 @@ namespace ImageProcessingApp.ViewModels
                     SKBitmap bitmapNew = new SKBitmap(bitmapGrayscaled.Width, bitmapGrayscaled.Height);
                     unsafe
                     {
-                        byte binarizationTheshold = (byte)Convert.ToInt32(Math.Min(0, 255 * sliderValue));
+                        byte binarizationTheshold = (byte)Convert.ToInt32(Math.Max(0, 255 * sliderValue));
                         uint* ptrIn = (uint*)bitmapGrayscaled.GetPixels().ToPointer();
                         uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
                         int pixelCount = bitmapGrayscaled.Width * bitmapGrayscaled.Height;
