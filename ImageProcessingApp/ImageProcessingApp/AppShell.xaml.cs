@@ -1,10 +1,10 @@
-﻿using ImageProcessingApp.ViewModels;
-using ImageProcessingApp.Views;
+﻿using ImageProcessingApp.Mobile.ViewModels;
+using ImageProcessingApp.Mobile.Views;
 using System;
 using System.Collections.Generic;
 using Xamarin.Forms;
 
-namespace ImageProcessingApp
+namespace ImageProcessingApp.Mobile
 {
     public partial class AppShell : Xamarin.Forms.Shell
     {

@@ -4,8 +4,10 @@ using Android.App;
 using Android.Content.PM;
 using Android.Runtime;
 using Android.OS;
+using System.IO;
+using ImageProcessingApp.Mobile.Configurations;
 
-namespace ImageProcessingApp.Droid
+namespace ImageProcessingApp.Mobile.Droid
 {
     [Activity(Label = "ImageProcessingApp", Icon = "@mipmap/icon", Theme = "@style/MainTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize )]
     public class MainActivity : global::Xamarin.Forms.Platform.Android.FormsAppCompatActivity
@@ -20,6 +22,8 @@ namespace ImageProcessingApp.Droid
             var width = Resources.DisplayMetrics.WidthPixels;
             var height = Resources.DisplayMetrics.HeightPixels;
             var density = Resources.DisplayMetrics.Density;
+
+            App.LocalImagesDirectory = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), Constants.ImagesFolder);
 
             App.ScreenWidth = (width - 0.5f) / density;
             App.ScreenHeight = (height - 0.5f) / density;

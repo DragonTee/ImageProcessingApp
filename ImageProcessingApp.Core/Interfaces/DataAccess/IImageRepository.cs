@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace ImageProcessingApp.Core.Interfaces.DataAccess
 {
-    interface IImageRepository
+    public interface IImageRepository
     {
-        ICollection<ImageFile> GetLatestImages(int count);
-        ICollection<ImageFile> GetLatestImages(int page, int pageSize);
+        ICollection<ImageFile> GetLatestImages(string imagesPath, int count);
+        ICollection<ImageFile> GetLatestImages(string imagesPath, int page, int pageSize);
     }
 }

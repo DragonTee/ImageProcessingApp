@@ -2,7 +2,7 @@
 using System;
 using Xamarin.Forms;
 
-namespace ImageProcessingApp.Controls
+namespace ImageProcessingApp.Mobile.Controls
 {
     public class CustomSKCanvas : SKCanvasView
     {

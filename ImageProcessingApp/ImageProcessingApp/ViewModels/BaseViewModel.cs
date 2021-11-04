@@ -1,12 +1,12 @@
-﻿using ImageProcessingApp.Models;
-using ImageProcessingApp.Services;
+﻿using ImageProcessingApp.Mobile.Models;
+using ImageProcessingApp.Mobile.Services;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Xamarin.Forms;
 
-namespace ImageProcessingApp.ViewModels
+namespace ImageProcessingApp.Mobile.ViewModels
 {
     public class BaseViewModel : INotifyPropertyChanged
     {

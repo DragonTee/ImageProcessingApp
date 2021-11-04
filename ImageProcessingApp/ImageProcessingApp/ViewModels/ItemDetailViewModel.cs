@@ -1,10 +1,10 @@
-﻿using ImageProcessingApp.Models;
+﻿using ImageProcessingApp.Mobile.Models;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 
-namespace ImageProcessingApp.ViewModels
+namespace ImageProcessingApp.Mobile.ViewModels
 {
     [QueryProperty(nameof(ItemId), nameof(ItemId))]
     public class ItemDetailViewModel : BaseViewModel

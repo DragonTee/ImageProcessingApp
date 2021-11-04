@@ -10,21 +10,20 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageProcessingApp.Mobile", "ImageProcessingApp\ImageProcessingApp\ImageProcessingApp.Mobile.csproj", "{E60A3AF9-E4C3-4F15-971E-92E522FD38E3}"
 	ProjectSection(ProjectDependencies) = postProject
 		{9BF80093-2EE6-43F5-9EC6-DA6FB88697BA} = {9BF80093-2EE6-43F5-9EC6-DA6FB88697BA}
-		{425016F2-59CB-4DC1-BA6E-6FE56377A2D3} = {425016F2-59CB-4DC1-BA6E-6FE56377A2D3}
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{08B1A354-81F2-486C-97AD-D98B681B9823}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ImageProcessingApp.Mobile", "ImageProcessingApp.Mobile", "{BA000DDF-506C-4E3F-8F42-A40F22D65ADD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessingApp.Mobile.Infrastructure", "ImageProcessingApp.Infrastructure\ImageProcessingApp.Mobile.Infrastructure.csproj", "{9BF80093-2EE6-43F5-9EC6-DA6FB88697BA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageProcessingApp.Infrastructure", "ImageProcessingApp.Infrastructure\ImageProcessingApp.Infrastructure.csproj", "{9BF80093-2EE6-43F5-9EC6-DA6FB88697BA}"
 	ProjectSection(ProjectDependencies) = postProject
 		{425016F2-59CB-4DC1-BA6E-6FE56377A2D3} = {425016F2-59CB-4DC1-BA6E-6FE56377A2D3}
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ImageProcessingApp", "ImageProcessingApp", "{3C784B5C-B9D2-41C2-9979-338808851D22}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ImageProcessingApp.Core", "ImageProcessingApp.Core\ImageProcessingApp.Core.csproj", "{425016F2-59CB-4DC1-BA6E-6FE56377A2D3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImageProcessingApp.Core", "ImageProcessingApp.Core\ImageProcessingApp.Core.csproj", "{425016F2-59CB-4DC1-BA6E-6FE56377A2D3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

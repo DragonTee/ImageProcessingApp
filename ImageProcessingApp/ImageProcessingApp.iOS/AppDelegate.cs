@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 using Foundation;
+using ImageProcessingApp.Mobile.Configurations;
 using UIKit;
 
-namespace ImageProcessingApp.iOS
+namespace ImageProcessingApp.Mobile.iOS
 {
     // The UIApplicationDelegate for the application. This class is responsible for launching the 
     // User Interface of the application, as well as listening (and optionally responding) to 
@@ -26,6 +28,8 @@ namespace ImageProcessingApp.iOS
 
             App.ScreenWidth = UIScreen.MainScreen.Bounds.Width;
             App.ScreenHeight = UIScreen.MainScreen.Bounds.Height;
+            
+            App.LocalImagesDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "..", "Library", Constants.ImagesFolder);
 
             DevExpress.XamarinForms.Charts.iOS.Initializer.Init();
 

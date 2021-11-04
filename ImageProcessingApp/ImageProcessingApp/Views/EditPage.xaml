@@ -2,11 +2,11 @@
 <ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
-             x:Class="ImageProcessingApp.Views.EditPage"
+             x:Class="ImageProcessingApp.Mobile.Views.EditPage"
              Title="{Binding Title}"
-             xmlns:local="clr-namespace:ImageProcessingApp.Controls;assembly=ImageProcessingApp"
-             xmlns:vm="clr-namespace:ImageProcessingApp.ViewModels"
-             xmlns:Helpers="clr-namespace:ImageProcessingApp.Helpers">
+             xmlns:local="clr-namespace:ImageProcessingApp.Mobile.Controls;assembly=ImageProcessingApp.Mobile"
+             xmlns:vm="clr-namespace:ImageProcessingApp.Mobile.ViewModels"
+             xmlns:Helpers="clr-namespace:ImageProcessingApp.Mobile.Helpers">
     <ContentPage.BindingContext>
         <vm:EditViewModel/>
     </ContentPage.BindingContext>

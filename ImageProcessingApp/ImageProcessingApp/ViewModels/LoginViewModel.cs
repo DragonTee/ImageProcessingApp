@@ -1,10 +1,10 @@
-﻿using ImageProcessingApp.Views;
+﻿using ImageProcessingApp.Mobile.Views;
 using System;
 using System.Collections.Generic;
 using System.Text;
 using Xamarin.Forms;
 
-namespace ImageProcessingApp.ViewModels
+namespace ImageProcessingApp.Mobile.ViewModels
 {
     public class LoginViewModel : BaseViewModel
     {

@@ -1,8 +1,8 @@
-﻿using ImageProcessingApp.ViewModels;
+﻿using ImageProcessingApp.Mobile.ViewModels;
 using System.ComponentModel;
 using Xamarin.Forms;
 
-namespace ImageProcessingApp.Views
+namespace ImageProcessingApp.Mobile.Views
 {
     public partial class ItemDetailPage : ContentPage
     {

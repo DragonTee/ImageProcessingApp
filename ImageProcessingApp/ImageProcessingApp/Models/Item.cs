@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ImageProcessingApp.Models
+namespace ImageProcessingApp.Mobile.Models
 {
     public class Item
     {

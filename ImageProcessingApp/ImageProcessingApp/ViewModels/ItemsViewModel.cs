@@ -1,12 +1,12 @@
-﻿using ImageProcessingApp.Models;
-using ImageProcessingApp.Views;
+﻿using ImageProcessingApp.Mobile.Models;
+using ImageProcessingApp.Mobile.Views;
 using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 
-namespace ImageProcessingApp.ViewModels
+namespace ImageProcessingApp.Mobile.ViewModels
 {
     public class ItemsViewModel : BaseViewModel
     {

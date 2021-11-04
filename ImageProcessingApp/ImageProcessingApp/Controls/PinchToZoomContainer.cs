@@ -4,7 +4,7 @@ using System.Text;
 using Xamarin.Forms;
 using Xamarin.Forms.Internals;
 
-namespace ImageProcessingApp.Controls
+namespace ImageProcessingApp.Mobile.Controls
 {
     public class PinchToZoomContainer : ContentView
     {

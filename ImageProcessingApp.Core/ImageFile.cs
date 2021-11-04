@@ -6,8 +6,8 @@ using System.Threading.Tasks;
 
 namespace ImageProcessingApp.Core
 {
-    class ImageFile
+    public class ImageFile
     {
-        string Path { get; set; }
+        public string Path { get; set; }
     }
 }

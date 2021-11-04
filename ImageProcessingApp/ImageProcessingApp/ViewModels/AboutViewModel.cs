@@ -4,7 +4,7 @@ using System.Windows.Input;
 using Xamarin.Essentials;
 using Xamarin.Forms;
 
-namespace ImageProcessingApp.ViewModels
+namespace ImageProcessingApp.Mobile.ViewModels
 {
     public class AboutViewModel : BaseViewModel
     {

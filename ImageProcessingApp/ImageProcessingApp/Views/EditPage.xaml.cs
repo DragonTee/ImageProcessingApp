@@ -1,4 +1,4 @@
-﻿using ImageProcessingApp.ViewModels;
+﻿using ImageProcessingApp.Mobile.ViewModels;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
-namespace ImageProcessingApp.Views
+namespace ImageProcessingApp.Mobile.Views
 {
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class EditPage : ContentPage

@@ -5,7 +5,7 @@ using System.Linq;
 using Foundation;
 using UIKit;
 
-namespace ImageProcessingApp.iOS
+namespace ImageProcessingApp.Mobile.iOS
 {
     public class Application
     {

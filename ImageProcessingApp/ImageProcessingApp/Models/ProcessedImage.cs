@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace ImageProcessingApp.Models
+namespace ImageProcessingApp.Mobile.Models
 {
     public class ProcessedImage
     {

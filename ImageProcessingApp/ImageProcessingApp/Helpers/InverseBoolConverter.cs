@@ -2,7 +2,7 @@
 using System.Globalization;
 using Xamarin.Forms;
 
-namespace ImageProcessingApp.Helpers
+namespace ImageProcessingApp.Mobile.Helpers
 {
     class InverseBoolConverter : IValueConverter
     {

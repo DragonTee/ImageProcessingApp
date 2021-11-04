@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace ImageProcessingApp.Services
+namespace ImageProcessingApp.Mobile.Services
 {
     public interface IDataStore<T>
     {

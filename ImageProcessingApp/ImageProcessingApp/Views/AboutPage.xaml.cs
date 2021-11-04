@@ -6,7 +6,7 @@ using Xamarin.Essentials;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
-namespace ImageProcessingApp.Views
+namespace ImageProcessingApp.Mobile.Views
 {
     public partial class AboutPage : ContentPage
     {
