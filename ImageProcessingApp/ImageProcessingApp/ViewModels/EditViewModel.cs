@@ -1,5 +1,6 @@
 ﻿using FFImageLoading;
 using FFImageLoading.Transformations;
+using ImageProcessingApp.Mobile.Services.ImageProcessing;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -10,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
 using Xamarin.Essentials;
@@ -22,11 +24,16 @@ namespace ImageProcessingApp.Mobile.ViewModels
         private static readonly object bitmapLock = new object();
 
         private bool sliderNeeded = false;
+
+        private Thread sliderUpdateThread = null;
+
         public bool SliderNeeded
         {
             get => sliderNeeded;
             set => SetProperty(ref sliderNeeded, value);
         }
+
+        private ICommand sliderChangedCommand = null;
 
         private float sliderValue;
         public float SliderValue
@@ -34,8 +41,15 @@ namespace ImageProcessingApp.Mobile.ViewModels
             get => sliderValue;
             set
             {
-                MainThread.BeginInvokeOnMainThread(async () => await BinarizeBitmap());
-                SetProperty(ref sliderValue, value);                
+                SetProperty(ref sliderValue, value);
+                if (sliderUpdateThread != null)
+                    sliderUpdateThread.Abort();
+                sliderUpdateThread = new Thread(() =>
+                {
+                    sliderChangedCommand.Execute(this);
+                });                
+                sliderUpdateThread.Start();
+                sliderUpdateThread.Join();
             }
         }
 
@@ -51,13 +65,6 @@ namespace ImageProcessingApp.Mobile.ViewModels
         {
             get => imageLoaded;
             set => SetProperty(ref imageLoaded, value);
-        }
-
-        private bool effectSelected = false;
-        public bool EffectSelected
-        {
-            get => effectSelected;
-            set => SetProperty(ref effectSelected, value);
         }
 
         private SKBitmap bitmapLoaded;
@@ -81,12 +88,80 @@ namespace ImageProcessingApp.Mobile.ViewModels
             Title = "Edit Image";
             TakePhoto = new Command(() => MainThread.BeginInvokeOnMainThread(async () => await TakePhotoAsync()));
             PickPhoto = new Command(() => MainThread.BeginInvokeOnMainThread(async () => await PickPhotoAsync()));
-            Pasterize = new Command(async () => await PasterizeBitmap());
-            Grayscale = new Command(async () => await GrayscaleBitmap());
-            Binarize = new Command(async () => await BinarizeBitmap());
-            Invert = new Command(async () => await InvertBitmap());
-            RestoreImage = new Command(() => RestoreBitmapImage());
-            ResetImage = new Command(() => ResetBitmapImage());
+            Pasterize = new Command(async () => 
+            {
+                await Task.Run(() =>
+                {
+                    lock (bitmapLock)
+                    {
+                        SliderNeeded = false;
+                        DisposeProcessedBitmap();
+                        SKBitmap bitmap = BitmapLoaded.Copy();
+                        ImageProcessor.PasterizeBitmap(bitmap);
+                        BitmapProcessed = bitmap;
+                    }
+                });
+            });
+            Grayscale = new Command(async () =>
+            {
+                await Task.Run(() =>
+                {
+                    lock (bitmapLock)
+                    {
+                        SliderNeeded = false;
+                        DisposeProcessedBitmap();
+                        BitmapProcessed = bitmapGrayscaled.Copy();
+                    }
+                });
+            });
+            Binarize = new Command(async () =>
+            {
+                lock (bitmapLock)
+                {
+                    SliderNeeded = true;
+                    sliderChangedCommand = Binarize;
+                    DisposeProcessedBitmap();
+                    SKBitmap bitmap = BitmapLoaded.Copy();
+                    byte treshold = (byte)Math.Max((int)Math.Floor(sliderValue * 255), 0);
+                    ImageProcessor.BinarizeBitmap(bitmap, bitmapGrayscaled, treshold);
+                    BitmapProcessed = bitmap;
+                }
+            });
+            Invert = new Command(async () =>
+            {
+                await Task.Run(() =>
+                {
+                    lock (bitmapLock)
+                    {
+                        SliderNeeded = false;
+                        DisposeProcessedBitmap();
+                        SKBitmap bitmap = BitmapLoaded.Copy();
+                        ImageProcessor.InvertBitmap(bitmap);
+                        BitmapProcessed = bitmap;
+                    }
+                });
+            });
+            RestoreImage = new Command(async () =>
+            {
+                await Task.Run(() =>
+                {
+                    lock (bitmapLock)
+                    {
+                        SliderNeeded = false;
+                        RestoreBitmapImage();
+                    }
+                });
+            });
+            ResetImage = new Command(async () =>
+            {
+                await Task.Run(() =>
+                {
+                    lock (bitmapLock)
+                    {
+                        ResetBitmapImage();
+                    }
+                });
+            });
         }
 
         public ICommand ResetImage { get; }
@@ -97,16 +172,21 @@ namespace ImageProcessingApp.Mobile.ViewModels
         public ICommand Grayscale { get; }
         public ICommand Invert { get; }
         public ICommand Binarize { get; }
+        public ICommand BinarizeUpdate { get; }
 
         private void RestoreBitmapImage()
         {
-            EffectSelected = false;
             BitmapProcessed = BitmapLoaded.Copy();
+        }
+
+        private void DisposeProcessedBitmap()
+        {
+            BitmapProcessed.Dispose();
+            BitmapProcessed = null;
         }
 
         private void ResetBitmapImage()
         {
-            EffectSelected = false;
             BitmapLoaded.Dispose();
             BitmapProcessed.Dispose();
             bitmapGrayscaled.Dispose();
@@ -173,137 +253,9 @@ namespace ImageProcessingApp.Mobile.ViewModels
             BitmapProcessed = BitmapLoaded.Copy();
             ImageLoaded = true;
             SliderNeeded = false;
-            await InitializeGrayscaledBitmap();
-            return;
+            bitmapGrayscaled = BitmapLoaded.Copy();
+            ImageProcessor.Grayscale(bitmapGrayscaled);
         }
-
-        private async Task PasterizeBitmap()
-        {
-            await Task.Run(() =>
-            {
-                lock (bitmapLock)
-                {
-                    SKBitmap bitmapNew = new SKBitmap(BitmapLoaded.Width, BitmapLoaded.Height);
-                    unsafe
-                    {
-                        uint* ptrIn = (uint*)BitmapLoaded.GetPixels().ToPointer();
-                        uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
-                        int pixelCount = BitmapLoaded.Width * BitmapLoaded.Height;
-
-                        for (int i = 0; i < pixelCount; i++)
-                        {
-                            *ptrOut++ = *ptrIn++ & 0xE0E0E0FF;
-                        }
-                    }
-                    bitmapProcessed.Dispose();
-                    BitmapProcessed = bitmapNew;
-                    EffectSelected = true;
-                    SliderNeeded = false;
-                }
-            });
-        }
-
-        private async Task InitializeGrayscaledBitmap()
-        {
-            await Task.Run(() =>
-            {
-                lock (bitmapLock)
-                {
-                    SKBitmap bitmapNew = new SKBitmap(BitmapLoaded.Width, BitmapLoaded.Height);
-                    unsafe
-                    {
-                        uint* ptrIn = (uint*)BitmapLoaded.GetPixels().ToPointer();
-                        uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
-                        int pixelCount = BitmapLoaded.Width * BitmapLoaded.Height;
-
-                        for (int i = 0; i < pixelCount; i++)
-                        {
-                            byte value = (byte)((*ptrIn & 255) * 3 / 10 + ((*ptrIn >> 8) & 255) * 59 / 100 + ((*ptrIn >> 16) & 255) * 11 / 100);
-                            ptrIn++;
-                            *ptrOut++ = MakePixel(value, value, value, 255);
-                        }
-                    }
-                    if (bitmapGrayscaled != null)
-                        bitmapGrayscaled.Dispose();
-                    bitmapGrayscaled = bitmapNew;
-                }
-            });
-        }
-
-        private async Task BinarizeBitmap()
-        {
-            await Task.Run(() =>
-            {
-                lock (bitmapLock)
-                {
-                    SKBitmap bitmapNew = new SKBitmap(bitmapGrayscaled.Width, bitmapGrayscaled.Height);
-                    unsafe
-                    {
-                        byte binarizationTheshold = (byte)Convert.ToInt32(Math.Max(0, 255 * sliderValue));
-                        uint* ptrIn = (uint*)bitmapGrayscaled.GetPixels().ToPointer();
-                        uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
-                        int pixelCount = bitmapGrayscaled.Width * bitmapGrayscaled.Height;
-
-                        for (int i = 0; i < pixelCount; i++)
-                        {
-                            byte value = (byte)((*ptrIn & 255) > binarizationTheshold ? 255 : 0);
-                            ptrIn++;
-                            *ptrOut++ = MakePixel(value, value, value, 255);
-                        }
-                    }
-                    BitmapProcessed.Dispose();
-                    BitmapProcessed = bitmapNew;
-                    SliderNeeded = true;
-                }
-            });
-        }
-
-        private async Task InvertBitmap()
-        {
-            await Task.Run(() =>
-            {
-                lock (bitmapLock)
-                {
-                    SKBitmap bitmapNew = new SKBitmap(bitmapLoaded.Width, bitmapLoaded.Height);
-                    unsafe
-                    {
-                        uint* ptrIn = (uint*)bitmapLoaded.GetPixels().ToPointer();
-                        uint* ptrOut = (uint*)bitmapNew.GetPixels().ToPointer();
-                        int pixelCount = bitmapGrayscaled.Width * bitmapGrayscaled.Height;
-
-                        for (int i = 0; i < pixelCount; i++)
-                        {
-                            byte r = (byte)(255 - (*ptrIn & 255));
-                            byte g = (byte)(255 - ((*ptrIn >> 8) & 255));
-                            byte b = (byte)(255 - ((*ptrIn >> 16) & 255));
-                            ptrIn++;
-                            *ptrOut++ = MakePixel(r, g, b, 255);
-                        }
-                    }
-                    BitmapProcessed.Dispose();
-                    BitmapProcessed = bitmapNew;
-                    SliderNeeded = false;
-                }
-            });
-        }
-
-        private async Task GrayscaleBitmap()
-        {
-            await Task.Run(() =>
-            {
-                lock (bitmapLock)
-                {
-                    bitmapProcessed.Dispose();
-                    BitmapProcessed = bitmapGrayscaled.Copy();
-                    EffectSelected = true;
-                    SliderNeeded = false;
-                }
-            });
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        uint MakePixel(byte red, byte green, byte blue, byte alpha) =>
-            (uint)((alpha << 24) | (blue << 16) | (green << 8) | red);
 
         private static SKBitmap AutoOrient(SKBitmap bitmap, SKEncodedOrigin origin)
         {

@@ -53,7 +53,6 @@ namespace ImageProcessingApp.Mobile.Views
                 canvas.Clear();
                 canvas.DrawBitmap(model.BitmapProcessed, info.Rect);
             }
-            Console.WriteLine("Validating canvas");
         }
 
         private void Slider_ValueChanged(object sender, ValueChangedEventArgs e)
