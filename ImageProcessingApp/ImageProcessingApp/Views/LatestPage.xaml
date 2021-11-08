@@ -1,0 +1,89 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ImageProcessingApp.Mobile.Views.LatestPage"
+             xmlns:vm="clr-namespace:ImageProcessingApp.Mobile.ViewModels"
+             xmlns:Helpers="clr-namespace:ImageProcessingApp.Mobile.Helpers">
+    <ContentPage.BindingContext>
+        <vm:LatestViewModel/>
+    </ContentPage.BindingContext>
+    <ContentPage.Content>
+        <StackLayout Spacing="0">
+            <StackLayout.Background>
+                <RadialGradientBrush Center="0.2,-0.2" Radius="1.3">
+                    <GradientStop Color="#401941"
+                          Offset="0" />
+                    <GradientStop Color="#151C34"
+                          Offset="0.6" />
+                    <GradientStop Color="#0A0718"
+                          Offset="1.0" />
+                </RadialGradientBrush>
+            </StackLayout.Background>
+            <Frame VerticalOptions="FillAndExpand" CornerRadius="0" BackgroundColor="Transparent">
+            </Frame>
+            <Grid HeightRequest="87" Padding="15,5,15,-5">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Polygon Points="420,0 0,100 420,100"
+                    Fill="#dff9dc"
+                    StrokeThickness="0" 
+                    Margin="-220,0,-15,-15"
+                    Grid.Column="1"
+                    />
+
+                <RelativeLayout>
+                    <StackLayout 
+                        Orientation="Horizontal" Spacing="-4" 
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}">
+                        <Image Source="icon_edit_unselected.png" Margin="16"/>
+                        <Label Text="Edit" FontSize="Large" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" FontFamily="Quicksand"/>
+                    </StackLayout>
+                    <Button
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}"
+                        BackgroundColor="Transparent"
+                        Command="{Binding EditCommand}"/>
+                </RelativeLayout>
+
+                <RelativeLayout Grid.Column="1">
+                    <StackLayout
+                        Orientation="Horizontal" Spacing="2" 
+                        RelativeLayout.XConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.25}"
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}">
+                        <Label Text="Latest" FontSize="Large" TextColor="{StaticResource Secondary}" VerticalTextAlignment="Center" FontFamily="Quicksand"
+                               Margin="6,0,0,0"/>
+                        <Image Source="icon_latest_selected.png" Margin="10"/>
+                    </StackLayout>
+                    <Button 
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}"
+                        BackgroundColor="Transparent"
+                        Command="{Binding LatestCommand}"/>
+                </RelativeLayout>
+                <!--<Button 
+                    HorizontalOptions="Start"
+                    BackgroundColor="Transparent" Command="{Binding EditCommand}" ContentLayout="Left,12"
+                    Text="Edit" FontSize="Large" TextColor="{StaticResource Primary}" FontFamily="Quicksand"
+                    ImageSource="icon_edit_unselected.png"/>
+                <Button 
+                    Grid.Column="1" HorizontalOptions="End"
+                    BackgroundColor="Transparent" Command="{Binding LatestCommand}" ContentLayout="Right,12"
+                    Text="Latest" FontSize="Large" TextColor="{StaticResource Secondary}" FontFamily="Quicksand"
+                    ImageSource="icon_latest_selected.png"/>-->
+
+            </Grid>
+
+        </StackLayout>
+    </ContentPage.Content>
+</ContentPage>

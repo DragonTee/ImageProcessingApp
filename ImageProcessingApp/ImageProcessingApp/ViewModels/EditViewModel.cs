@@ -1,6 +1,7 @@
 ﻿using FFImageLoading;
 using FFImageLoading.Transformations;
 using ImageProcessingApp.Mobile.Services.ImageProcessing;
+using ImageProcessingApp.Mobile.Views;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -86,6 +87,10 @@ namespace ImageProcessingApp.Mobile.ViewModels
         public EditViewModel()
         {
             Title = "Edit Image";
+            LatestCommand = new Command(async () =>
+            {
+                await Application.Current.MainPage.Navigation.PushAsync(new LatestPage(), false);
+            });
             TakePhoto = new Command(() => MainThread.BeginInvokeOnMainThread(async () => await TakePhotoAsync()));
             PickPhoto = new Command(() => MainThread.BeginInvokeOnMainThread(async () => await PickPhotoAsync()));
             Pasterize = new Command(async () => 
@@ -164,6 +169,8 @@ namespace ImageProcessingApp.Mobile.ViewModels
             });
         }
 
+
+        public ICommand LatestCommand { get; }
         public ICommand ResetImage { get; }
         public ICommand RestoreImage { get; }
         public ICommand TakePhoto { get; }
