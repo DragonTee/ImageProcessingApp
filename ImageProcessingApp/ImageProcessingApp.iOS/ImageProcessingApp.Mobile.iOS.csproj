@@ -132,6 +132,9 @@
     <Reference Include="System.Numerics.Vectors" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="ColorPicker.Xamarin.Forms">
+      <Version>1.3.4.21</Version>
+    </PackageReference>
     <PackageReference Include="DevExpress.XamarinForms.Charts">
       <Version>21.1.6</Version>
     </PackageReference>

@@ -5,6 +5,7 @@
              xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
              x:Class="ImageProcessingApp.Mobile.Views.EditPage"
              Title="{Binding Title}"
+             xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
              xmlns:local="clr-namespace:ImageProcessingApp.Mobile.Controls;assembly=ImageProcessingApp.Mobile"
              xmlns:vm="clr-namespace:ImageProcessingApp.Mobile.ViewModels"
              xmlns:Helpers="clr-namespace:ImageProcessingApp.Mobile.Helpers">
@@ -76,10 +77,27 @@
                     </local:PinchToZoomContainer.Content>
                 </local:PinchToZoomContainer>
 
-                <!-- Footer -->
-                <StackLayout Grid.Row="3" Grid.ColumnSpan="4"
-                Margin="10" HeightRequest="30" Orientation="Horizontal" IsVisible="{Binding SliderNeeded}">
+                <StackLayout Grid.Row="3" Grid.ColumnSpan="4" Grid.Column="0"
+                Margin="10" Spacing="0" HeightRequest="30" Orientation="Horizontal" IsVisible="{Binding SliderNeeded}">
+                    <colorpicker:HSLSliders
+                        ShowAlphaSlider="False"
+                        Scale="1"
+                        Grid.Column="1"
+                        Grid.Row="3"
+                        x:Name="ColorSliders1"
+                        IsVisible="True"
+                        SelectedColor="{Binding ColorValue1}"
+                        Padding="0,5"/>
                     <Slider HorizontalOptions="FillAndExpand" HeightRequest="20" Minimum="0" Maximum="1" Value="{Binding SliderValue}" ValueChanged="Slider_ValueChanged"/>
+                    <colorpicker:HSLSliders
+                        ShowAlphaSlider="False"
+                        Scale="1"
+                        Grid.Column="1"
+                        Grid.Row="3"
+                        x:Name="ColorSliders2"
+                        IsVisible="True"
+                        SelectedColor="{Binding ColorValue2}"
+                        Padding="0,5"/>
                 </StackLayout>
                 <ScrollView Grid.Row="4" Grid.ColumnSpan="4"
                 Margin="10" Orientation="Horizontal" IsVisible="{Binding ImageLoaded}">

@@ -54,6 +54,42 @@ namespace ImageProcessingApp.Mobile.ViewModels
             }
         }
 
+        private Xamarin.Forms.Color colorValue1;
+        public Xamarin.Forms.Color ColorValue1
+        {
+            get => colorValue1;
+            set
+            {
+                SetProperty(ref colorValue1, value);
+                if (sliderUpdateThread != null)
+                    sliderUpdateThread.Abort();
+                sliderUpdateThread = new Thread(() =>
+                {
+                    sliderChangedCommand.Execute(this);
+                });
+                sliderUpdateThread.Start();
+                sliderUpdateThread.Join();
+            }
+        }
+
+        private Xamarin.Forms.Color colorValue2;
+        public Xamarin.Forms.Color ColorValue2
+        {
+            get => colorValue2;
+            set
+            {
+                SetProperty(ref colorValue2, value);
+                if (sliderUpdateThread != null)
+                    sliderUpdateThread.Abort();
+                sliderUpdateThread = new Thread(() =>
+                {
+                    sliderChangedCommand.Execute(this);
+                });
+                sliderUpdateThread.Start();
+                sliderUpdateThread.Join();
+            }
+        }
+
         private ImageSource image;
         public ImageSource Image 
         { 
@@ -123,12 +159,20 @@ namespace ImageProcessingApp.Mobile.ViewModels
             {
                 lock (bitmapLock)
                 {
+                    var r1 = (byte)Math.Max((int)Math.Floor(colorValue1.R * 255), 0);
+                    var g1 = (byte)Math.Max((int)Math.Floor(colorValue1.G * 255), 0);
+                    var b1 = (byte)Math.Max((int)Math.Floor(colorValue1.B * 255), 0);
+                    var r2 = (byte)Math.Max((int)Math.Floor(colorValue2.R * 255), 0);
+                    var g2 = (byte)Math.Max((int)Math.Floor(colorValue2.G * 255), 0);
+                    var b2 = (byte)Math.Max((int)Math.Floor(colorValue2.B * 255), 0);
+                    var color1 = System.Drawing.Color.FromArgb(255, r1, g1, b1);
+                    var color2 = System.Drawing.Color.FromArgb(255, r2, g2, b2);
                     SliderNeeded = true;
                     sliderChangedCommand = Binarize;
                     DisposeProcessedBitmap();
                     SKBitmap bitmap = BitmapLoaded.Copy();
                     byte treshold = (byte)Math.Max((int)Math.Floor(sliderValue * 255), 0);
-                    ImageProcessor.BinarizeBitmap(bitmap, bitmapGrayscaled, treshold);
+                    ImageProcessor.BinarizeBitmap(bitmap, bitmapGrayscaled, treshold, color1, color2);
                     BitmapProcessed = bitmap;
                 }
             });
