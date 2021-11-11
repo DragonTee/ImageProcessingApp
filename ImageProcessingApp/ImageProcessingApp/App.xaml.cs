@@ -6,6 +6,10 @@ using ImageProcessingApp.Mobile.Infrastructure.DataAccess;
 using ImageProcessingApp.Mobile.Services;
 using ImageProcessingApp.Core.Interfaces.DataAccess;
 
+[assembly: ExportFont("Quicksand-Light.ttf", Alias = "QuicksandLight")]
+[assembly: ExportFont("Quicksand-Medium.ttf", Alias = "QuicksandMedium")]
+[assembly: ExportFont("Quicksand-Regular.ttf", Alias = "Quicksand")]
+
 namespace ImageProcessingApp.Mobile
 {
     public partial class App : Application

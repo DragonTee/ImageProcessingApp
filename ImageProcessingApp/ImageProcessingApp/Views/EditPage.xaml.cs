@@ -1,4 +1,5 @@
-﻿using ImageProcessingApp.Mobile.ViewModels;
+﻿using DevExpress.XamarinForms.Charts;
+using ImageProcessingApp.Mobile.ViewModels;
 using SkiaSharp;
 using System;
 using System.Collections.Generic;
@@ -17,6 +18,18 @@ namespace ImageProcessingApp.Mobile.Views
         public EditPage()
         {
             InitializeComponent();
+            ChartStyle chartStyle = new ChartStyle
+            {
+                BorderColor = Color.FromRgba(100, 100, 100, 100),
+                BorderThickness = 0.0f,
+                BackgroundColor = Color.White
+            };
+            chartStyle.Palette = (new Color[] {
+                Color.Red,
+                Color.Green,
+                Color.Blue
+            });
+            chartSlice.ChartStyle = chartStyle;
         }
 
         protected override void OnBindingContextChanged()
@@ -26,7 +39,7 @@ namespace ImageProcessingApp.Mobile.Views
         }
 
         private void OnCanvasViewPaintSurface(object sender, SkiaSharp.Views.Forms.SKPaintSurfaceEventArgs args)
-        {            
+        {
             SKImageInfo info = args.Info;
             SKSurface surface = args.Surface;
             SKCanvas canvas = surface.Canvas;
@@ -57,7 +70,9 @@ namespace ImageProcessingApp.Mobile.Views
 
         private void Slider_ValueChanged(object sender, ValueChangedEventArgs e)
         {
-            var model = BindingContext;
+            EditViewModel model = (EditViewModel)this.BindingContext;
+            model.ColorValue1 = ColorSliders1.SelectedColor;
+            model.ColorValue2 = ColorSliders2.SelectedColor;
         }
     }
 }

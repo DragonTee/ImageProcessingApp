@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-
+using ColorPicker.iOS;
 using Foundation;
 using ImageProcessingApp.Mobile.Configurations;
 using UIKit;
@@ -32,6 +32,7 @@ namespace ImageProcessingApp.Mobile.iOS
             App.LocalImagesDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "..", "Library", Constants.ImagesFolder);
 
             DevExpress.XamarinForms.Charts.iOS.Initializer.Init();
+            ColorPickerEffects.Init();
 
             LoadApplication(new App());
 

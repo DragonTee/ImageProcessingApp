@@ -1,141 +1,453 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
+<ContentPage 
+             xmlns="http://xamarin.com/schemas/2014/forms"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              xmlns:skia="clr-namespace:SkiaSharp.Views.Forms;assembly=SkiaSharp.Views.Forms"
              x:Class="ImageProcessingApp.Mobile.Views.EditPage"
              Title="{Binding Title}"
+             xmlns:colorpicker="clr-namespace:ColorPicker;assembly=ColorPicker"
              xmlns:local="clr-namespace:ImageProcessingApp.Mobile.Controls;assembly=ImageProcessingApp.Mobile"
              xmlns:vm="clr-namespace:ImageProcessingApp.Mobile.ViewModels"
+             xmlns:dxc="http://schemas.devexpress.com/xamarin/2014/forms/charts"
              xmlns:Helpers="clr-namespace:ImageProcessingApp.Mobile.Helpers">
-    <Shell.TitleView>
-        <Label TextColor="{StaticResource Secondary}"
-               HorizontalTextAlignment="Center" HorizontalOptions="CenterAndExpand"
-               VerticalTextAlignment="Center" VerticalOptions="CenterAndExpand"
-               FontSize="Large" Text="{Binding Title}" />
-    </Shell.TitleView>
     <ContentPage.BindingContext>
         <vm:EditViewModel/>
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <Grid BackgroundColor="{StaticResource Primary}">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="6*" />
-                <RowDefinition Height="*" />
-                <RowDefinition Height="2*" />
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="8*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Button Grid.Column="1"
-                Text="Pick Image" Command="{Binding PickPhoto}" IsVisible="{Binding ImageLoaded, Converter={Helpers:InverseBoolConverter}}"/>
-            <Button Grid.Column="1" Grid.Row="1"
-                    Text="Take Photo" Command="{Binding TakePhoto}" IsVisible="{Binding ImageLoaded, Converter={Helpers:InverseBoolConverter}}"/>
-            <Button Grid.Column="1"
-                Text="Back" Command="{Binding ResetImage}" IsVisible="{Binding ImageLoaded}"/>
-            <!-- Content -->
-            <!--<local:CustomSKCanvas x:Name="canvasView"
-                PaintSurface="OnCanvasViewPaintSurface"
-                    FlexLayout.Grow="1" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand"/>-->
-            <local:PinchToZoomContainer Grid.Row="1" Grid.ColumnSpan="3" Grid.RowSpan="2"
+        <StackLayout Spacing="0">
+            <StackLayout.Background>
+                <RadialGradientBrush Center="0.2,-0.2" Radius="1.3">
+                    <GradientStop Color="#401941"
+                          Offset="0" />
+                    <GradientStop Color="#151C34"
+                          Offset="0.6" />
+                    <GradientStop Color="#0A0718"
+                          Offset="1.0" />
+                </RadialGradientBrush>
+            </StackLayout.Background>
+            <Grid BackgroundColor="Transparent" VerticalOptions="FillAndExpand">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="6*" />
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="2*" />
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="4*" />
+                    <ColumnDefinition Width="4*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Button Grid.Column="1" Grid.Row="4"
+                Text="Pick Image" Command="{Binding PickPhoto}" IsVisible="{Binding ImageLoaded, Converter={Helpers:InverseBoolConverter}}"
+                        TextColor="{StaticResource Primary}"
+                        BackgroundColor="{StaticResource Secondary}"
+                        BorderColor="{StaticResource Primary}"
+                        BorderWidth="1"
+                        CornerRadius="7"/>
+                <Button Grid.Column="2" Grid.Row="4"
+                    Text="Take Photo" Command="{Binding TakePhoto}" IsVisible="{Binding ImageLoaded, Converter={Helpers:InverseBoolConverter}}"
+                        TextColor="{StaticResource Primary}"
+                        BackgroundColor="{StaticResource Secondary}"
+                        BorderColor="{StaticResource Primary}"
+                        BorderWidth="1"
+                        CornerRadius="7"/>
+                <Button Grid.Column="1" Grid.ColumnSpan="1"
+                    Margin="10"
+                    BackgroundColor="{StaticResource Secondary}"
+                    TextColor="{StaticResource Primary}"
+                    BorderColor="{StaticResource Primary}"
+                    BorderWidth="1"
+                    CornerRadius="7"
+                    Text="Back" Command="{Binding ResetImage}" IsVisible="{Binding ImageLoaded}"/>
+                <Button Grid.Column="2" Grid.ColumnSpan="1"
+                    Margin="10"
+                    BackgroundColor="{StaticResource Secondary}"
+                    TextColor="{StaticResource Primary}"
+                    BorderColor="{StaticResource Primary}"
+                    BorderWidth="1"
+                    CornerRadius="7"
+                    Text="Apply" Command="{Binding ApplyCommand}" IsVisible="{Binding ImageLoaded}"/>
+                <local:PinchToZoomContainer Grid.Row="1" Grid.ColumnSpan="4" Grid.RowSpan="2"
                 FlexLayout.Grow="1" IsVisible="{Binding ImageLoaded}" IsClippedToBounds="True">
-                <local:PinchToZoomContainer.Content>
-                    <local:BitmapCanvas x:Name="canvasView"
+                    <local:PinchToZoomContainer.Content>
+                        <local:BitmapCanvas x:Name="canvasView"
                 PaintSurface="OnCanvasViewPaintSurface"
                 Bitmap="{Binding BitmapProcessed}"/>
-                </local:PinchToZoomContainer.Content>
-            </local:PinchToZoomContainer>
+                    </local:PinchToZoomContainer.Content>
+                </local:PinchToZoomContainer>
 
-            <!-- Footer -->
-            <StackLayout Grid.Row="3" Grid.ColumnSpan="3"
-                Margin="10" HeightRequest="30" Orientation="Horizontal" IsVisible="{Binding SliderNeeded}">
-                <Slider HorizontalOptions="FillAndExpand" HeightRequest="20" Minimum="0" Maximum="1" Value="{Binding SliderValue}" ValueChanged="Slider_ValueChanged"/>
-            </StackLayout>
-            <ScrollView Grid.Row="4" Grid.ColumnSpan="3"
-                Margin="10" Orientation="Horizontal" IsVisible="{Binding ImageLoaded}">
-                <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
-                    <FlexLayout Direction="Column" HeightRequest="70">
-                        <ImageButton Source="icon_home.png"
-                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding RestoreImage}"/>
-                        <Label TextColor="{StaticResource Secondary}" Text="Original" HeightRequest="20" HorizontalTextAlignment="Center"/>
-                    </FlexLayout>
-                    <FlexLayout Direction="Column" HeightRequest="70">
-                        <ImageButton Source="icon_add.png"
-                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Pasterize}"/>
-                        <Label TextColor="{StaticResource Secondary}" Text="Pasterize" HeightRequest="20" HorizontalTextAlignment="Center"/>
-                    </FlexLayout>
-                    <FlexLayout Direction="Column" HeightRequest="70">
-                        <ImageButton Source="icon_add.png"
-                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Grayscale}"/>
-                        <Label TextColor="{StaticResource Secondary}" Text="Grayscale" HeightRequest="20" HorizontalTextAlignment="Center"/>
-                    </FlexLayout>
-                    <FlexLayout Direction="Column" HeightRequest="70">
-                        <ImageButton Source="icon_add.png"
-                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Invert}"/>
-                        <Label TextColor="{StaticResource Secondary}" Text="Invert" HeightRequest="20" HorizontalTextAlignment="Center"/>
-                    </FlexLayout>
-                    <FlexLayout Direction="Column" HeightRequest="70">
-                        <ImageButton Source="icon_add.png"
-                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Binarize}"/>
-                        <Label TextColor="{StaticResource Secondary}" Text="Binarize" HeightRequest="20" HorizontalTextAlignment="Center"/>
-                    </FlexLayout>
+                <StackLayout Grid.Row="3" Grid.ColumnSpan="4" Grid.Column="0"
+                Margin="10" Spacing="0" HeightRequest="30" Orientation="Horizontal" IsVisible="{Binding SliderNeeded}">
+                    <colorpicker:HSLSliders
+                        ShowAlphaSlider="False"
+                        Scale="1"
+                        Grid.Column="1"
+                        Grid.Row="3"
+                        x:Name="ColorSliders1"
+                        IsVisible="{Binding ColorPickerNeeded}"
+                        SelectedColor="{Binding ColorValue1}"
+                        Padding="0,5"/>
+                    <Slider HorizontalOptions="FillAndExpand" HeightRequest="20" Minimum="0" Maximum="1" Value="{Binding SliderValue}" ValueChanged="Slider_ValueChanged"/>
+                    <colorpicker:HSLSliders
+                        ShowAlphaSlider="False"
+                        Scale="1"
+                        Grid.Column="1"
+                        Grid.Row="3"
+                        x:Name="ColorSliders2"
+                        IsVisible="{Binding SecondcolorPickerNeeded}"
+                        SelectedColor="{Binding ColorValue2}"
+                        Padding="0,5"/>
                 </StackLayout>
-            </ScrollView>
-        </Grid>
+                <ScrollView Grid.Row="4" Grid.ColumnSpan="4"
+                Margin="10" Orientation="Horizontal" IsVisible="{Binding StatsAvailable}">
+                    <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_home.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding RestoreImage}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="Original" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Pasterize}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="Pasterize" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Grayscale}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="Grayscale" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Invert}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="Invert" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Binarize}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="Binarize" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding BrightnessCommand}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="Brightness" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding ContrastCommand}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="Contrast" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
+                    </StackLayout>
+                </ScrollView>
+                <Grid Grid.Row="3" Grid.ColumnSpan="4" Grid.RowSpan="2" IsVisible="{Binding ShowingStats}" Margin="0,-100,0,0">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <dxc:ChartView x:Name="chartr" Rotated="False" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand"  Grid.Row="1" Opacity="0.7">
+                        <dxc:ChartView.Series>
+                            <dxc:BarSeries LegendTextPattern="Red color histogram" BarWidth="2">
+                                <!-- Bind the series to the data source. -->
+                                <dxc:BarSeries.Data>
+                                    <dxc:SeriesDataAdapter 
+                            DataSource="{Binding ImageDataRed}"
+                            ArgumentDataMember="pixelIntensity">
+                                        <dxc:ValueDataMember Type="Value" Member="pixelCount"/>
+                                    </dxc:SeriesDataAdapter>
+                                </dxc:BarSeries.Data>
+
+                                <dxc:BarSeries.PointColorizer>
+                                    <dxc:ValueBandPointColorizer>
+                                        <dxc:ValueBandPointColorizer.ColorStops>
+                                            <dxc:ColorStop Color="Red" Value1="0" Value2="2000000000"/>
+                                        </dxc:ValueBandPointColorizer.ColorStops>
+                                    </dxc:ValueBandPointColorizer>
+                                </dxc:BarSeries.PointColorizer>
+                            </dxc:BarSeries>
+                        </dxc:ChartView.Series>
+                        <dxc:ChartView.Legend>
+                            <dxc:Legend>
+                            </dxc:Legend>
+                        </dxc:ChartView.Legend>
+                        <!-- Specify axis and legend settings here. -->
+                    </dxc:ChartView>
+                    <dxc:ChartView x:Name="chartg" Rotated="False" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Grid.Column="1" Grid.Row="1" Opacity="0.7">
+                        <dxc:ChartView.Series>
+                            <dxc:BarSeries LegendTextPattern="Green color histogram" BarWidth="2">
+                                <!-- Bind the series to the data source. -->
+                                <dxc:BarSeries.Data>
+                                    <dxc:SeriesDataAdapter 
+                            DataSource="{Binding ImageDataGreen}"
+                            ArgumentDataMember="pixelIntensity">
+                                        <dxc:ValueDataMember Type="Value" Member="pixelCount"/>
+                                    </dxc:SeriesDataAdapter>
+                                </dxc:BarSeries.Data>
+
+                                <dxc:BarSeries.PointColorizer>
+                                    <dxc:ValueBandPointColorizer>
+                                        <dxc:ValueBandPointColorizer.ColorStops>
+                                            <dxc:ColorStop Color="Green" Value1="0" Value2="2000000000"/>
+                                        </dxc:ValueBandPointColorizer.ColorStops>
+                                    </dxc:ValueBandPointColorizer>
+                                </dxc:BarSeries.PointColorizer>
+                            </dxc:BarSeries>
+                        </dxc:ChartView.Series>
+                        <dxc:ChartView.Legend>
+                            <dxc:Legend>
+                            </dxc:Legend>
+                        </dxc:ChartView.Legend>
+                        <!-- Specify axis and legend settings here. -->
+                    </dxc:ChartView>
+                    <dxc:ChartView x:Name="chartb" Rotated="False" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Grid.Row="2" Opacity="0.7">
+                        <dxc:ChartView.Series>
+                            <dxc:BarSeries LegendTextPattern="Blue color histogram" BarWidth="2">
+                                <!-- Bind the series to the data source. -->
+                                <dxc:BarSeries.Data>
+                                    <dxc:SeriesDataAdapter 
+                            DataSource="{Binding ImageDataBlue}"
+                            ArgumentDataMember="pixelIntensity">
+                                        <dxc:ValueDataMember Type="Value" Member="pixelCount"/>
+                                    </dxc:SeriesDataAdapter>
+                                </dxc:BarSeries.Data>
+
+                                <dxc:BarSeries.PointColorizer>
+                                    <dxc:ValueBandPointColorizer>
+                                        <dxc:ValueBandPointColorizer.ColorStops>
+                                            <dxc:ColorStop Color="Blue" Value1="0" Value2="2000000000"/>
+                                        </dxc:ValueBandPointColorizer.ColorStops>
+                                    </dxc:ValueBandPointColorizer>
+                                </dxc:BarSeries.PointColorizer>
+                            </dxc:BarSeries>
+                        </dxc:ChartView.Series>
+                        <dxc:ChartView.Legend>
+                            <dxc:Legend>
+                            </dxc:Legend>
+                        </dxc:ChartView.Legend>
+                        <!-- Specify axis and legend settings here. -->
+                    </dxc:ChartView>
+                    <dxc:ChartView x:Name="chartx" Rotated="False" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand" Grid.Row="2" Grid.Column="1" Opacity="0.7">
+                        <dxc:ChartView.Series>
+                            <dxc:BarSeries LegendTextPattern="Intensity histogram" BarWidth="2">
+                                <!-- Bind the series to the data source. -->
+                                <dxc:BarSeries.Data>
+                                    <dxc:SeriesDataAdapter 
+                            DataSource="{Binding ImageDataAll}"
+                            ArgumentDataMember="pixelIntensity">
+                                        <dxc:ValueDataMember Type="Value" Member="pixelCount"/>
+                                    </dxc:SeriesDataAdapter>
+                                </dxc:BarSeries.Data>
+
+                                <dxc:BarSeries.PointColorizer>
+                                    <dxc:ValueBandPointColorizer>
+                                        <dxc:ValueBandPointColorizer.ColorStops>
+                                            <dxc:ColorStop Color="Black" Value1="0" Value2="2000000000"/>
+                                        </dxc:ValueBandPointColorizer.ColorStops>
+                                    </dxc:ValueBandPointColorizer>
+                                </dxc:BarSeries.PointColorizer>
+                            </dxc:BarSeries>
+                        </dxc:ChartView.Series>
+                        <dxc:ChartView.Legend>
+                            <dxc:Legend>
+                            </dxc:Legend>
+                        </dxc:ChartView.Legend>
+                        <!-- Specify axis and legend settings here. -->
+                    </dxc:ChartView>
+
+                    <dxc:ChartView x:Name="chartSlice" Grid.Row="0" Grid.ColumnSpan="2" Opacity="0.7">
+                        <dxc:ChartView.ChartStyle>
+                            <dxc:ChartStyle BackgroundColor="Transparent"/>
+                        </dxc:ChartView.ChartStyle>
+                        <dxc:ChartView.AxisY>
+                            <dxc:NumericAxisY>
+                                <dxc:NumericAxisY.Title>
+                                    <dxc:AxisTitle Text="Intensity">
+                                        <dxc:AxisTitle.Style>
+                                            <dxc:TitleStyle>
+                                                <dxc:TitleStyle.TextStyle>
+                                                    <dxc:TextStyle Size="16"/>
+                                                </dxc:TitleStyle.TextStyle>
+                                            </dxc:TitleStyle>
+                                        </dxc:AxisTitle.Style>
+                                    </dxc:AxisTitle>
+                                </dxc:NumericAxisY.Title>
+                                <dxc:NumericAxisY.Label>
+                                    <dxc:AxisLabel TextFormat="#.#" Position="Inside"/>
+                                </dxc:NumericAxisY.Label>
+                            </dxc:NumericAxisY>
+                        </dxc:ChartView.AxisY>
+                        <dxc:ChartView.Series>
+                            <dxc:LineSeries DisplayName="Red">
+                                <dxc:LineSeries.PointColorizer>
+                                    <dxc:ValueBandPointColorizer>
+                                        <dxc:ValueBandPointColorizer.ColorStops>
+                                            <dxc:ColorStop Color="Red"/>
+                                        </dxc:ValueBandPointColorizer.ColorStops>
+                                    </dxc:ValueBandPointColorizer>
+                                </dxc:LineSeries.PointColorizer>
+                                <dxc:LineSeries.Data>
+                                    <dxc:SeriesDataAdapter DataSource="{Binding ImageDataSliceR}"
+                                           ArgumentDataMember="pixelIntensity">
+                                        <dxc:ValueDataMember Type="Value" Member="pixelCount"/>
+                                    </dxc:SeriesDataAdapter>
+                                </dxc:LineSeries.Data>
+                            </dxc:LineSeries>
+
+                            <dxc:LineSeries DisplayName="Green">
+                                <dxc:LineSeries.PointColorizer>
+                                    <dxc:ValueBandPointColorizer>
+                                        <dxc:ValueBandPointColorizer.ColorStops>
+                                            <dxc:ColorStop Color="Green"/>
+                                        </dxc:ValueBandPointColorizer.ColorStops>
+                                    </dxc:ValueBandPointColorizer>
+                                </dxc:LineSeries.PointColorizer>
+                                <dxc:LineSeries.Data>
+                                    <dxc:SeriesDataAdapter DataSource="{Binding ImageDataSliceG}"
+                                           ArgumentDataMember="pixelIntensity">
+                                        <dxc:ValueDataMember Type="Value" Member="pixelCount"/>
+                                    </dxc:SeriesDataAdapter>
+                                </dxc:LineSeries.Data>
+                            </dxc:LineSeries>
+
+                            <dxc:LineSeries DisplayName="Blue">
+                                <dxc:LineSeries.PointColorizer>
+                                    <dxc:ValueBandPointColorizer>
+                                        <dxc:ValueBandPointColorizer.ColorStops>
+                                            <dxc:ColorStop Color="Blue"/>
+                                        </dxc:ValueBandPointColorizer.ColorStops>
+                                    </dxc:ValueBandPointColorizer>
+                                </dxc:LineSeries.PointColorizer>
+                                <dxc:LineSeries.Data>
+                                    <dxc:SeriesDataAdapter DataSource="{Binding ImageDataSliceB}"
+                                           ArgumentDataMember="pixelIntensity">
+                                        <dxc:ValueDataMember Type="Value" Member="pixelCount"/>
+                                    </dxc:SeriesDataAdapter>
+                                </dxc:LineSeries.Data>
+                            </dxc:LineSeries>
+                        </dxc:ChartView.Series>
+                    </dxc:ChartView>
+                </Grid>
+            </Grid>
+            <Grid HeightRequest="87" Padding="15,5,15,-5">
+                <Grid.RowDefinitions>
+                    <RowDefinition/>
+                </Grid.RowDefinitions>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
+                <Polygon Points="0,0 0,100 420,100"
+                    Fill="#dff9dc"
+                    StrokeThickness="0" 
+                    Margin="-15,0,-200,-15"
+                    IsVisible="{Binding ShowingStats, Converter={Helpers:InverseBoolConverter}}"
+                    />
+                <RelativeLayout IsVisible="{Binding ShowingStats, Converter={Helpers:InverseBoolConverter}}">
+                    <StackLayout 
+                        Orientation="Horizontal" Spacing="-4" 
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}">
+                        <Image Source="icon_edit_selected.png" Margin="16"/>
+                        <Label Text="Edit" FontSize="Large" TextColor="{StaticResource Secondary}" VerticalTextAlignment="Center" FontFamily="Quicksand"/>
+                    </StackLayout>
+                    <Button
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}"
+                        BackgroundColor="Transparent"
+                        Command="{Binding EditCommand}"/>
+                </RelativeLayout>
+
+                <RelativeLayout Grid.Column="1" IsVisible="{Binding StatsAvailable, Converter={Helpers:InverseBoolConverter}}">
+                    <StackLayout
+                        Orientation="Horizontal" Spacing="2" 
+                        RelativeLayout.XConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.25}"
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}">
+                        <Label Text="Latest" FontSize="Large" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" FontFamily="Quicksand"
+                                Margin="6,0,0,0"/>
+                        <Image Source="icon_latest_unselected.png" Margin="10"/>
+                    </StackLayout>
+                    <Button 
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}"
+                        BackgroundColor="Transparent"
+                        Command="{Binding LatestCommand}"/>
+                </RelativeLayout>
+
+                <RelativeLayout Grid.Column="1" IsVisible="{Binding StatsAvailable}">
+                    <StackLayout
+                        Orientation="Horizontal" Spacing="2" 
+                        RelativeLayout.XConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.25}"
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}">
+                        <Label Text="Stats" FontSize="Large" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" FontFamily="Quicksand"
+                                Margin="16,0,0,0"/>
+                        <Image Source="icon_latest_unselected.png" Margin="10"/>
+                    </StackLayout>
+                    <Button 
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}"
+                        BackgroundColor="Transparent"
+                        Command="{Binding StatsCommand}"/>
+                </RelativeLayout>
+
+                <Polygon Points="420,0 0,100 420,100"
+                    Fill="#dff9dc"
+                    StrokeThickness="0" 
+                    Margin="-220,0,-15,-15"
+                    Grid.Column="1"
+                    IsVisible="{Binding ShowingStats}"
+                    />
+
+                <RelativeLayout IsVisible="{Binding ShowingStats}">
+                    <StackLayout 
+                        Orientation="Horizontal" Spacing="-4" 
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}">
+                        <Image Source="icon_edit_unselected.png" Margin="16"/>
+                        <Label Text="Edit" FontSize="Large" TextColor="{StaticResource Primary}" VerticalTextAlignment="Center" FontFamily="Quicksand"/>
+                    </StackLayout>
+                    <Button
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}"
+                        BackgroundColor="Transparent"
+                        Command="{Binding EditCommand}"/>
+                </RelativeLayout>
+
+                <RelativeLayout Grid.Column="1" IsVisible="{Binding ShowingStats}">
+                    <StackLayout
+                        Orientation="Horizontal" Spacing="2" 
+                        RelativeLayout.XConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.25}"
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}">
+                        <Label Text="Stats" FontSize="Large" TextColor="{StaticResource Secondary}" VerticalTextAlignment="Center" FontFamily="Quicksand"
+                               Margin="16,0,0,0"/>
+                        <Image Source="icon_latest_selected.png" Margin="10"/>
+                    </StackLayout>
+                    <Button 
+                        RelativeLayout.YConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.125}"
+                        RelativeLayout.HeightConstraint="{ConstraintExpression Type=RelativeToParent, Property=Height, Factor=0.75}"
+                        RelativeLayout.WidthConstraint="{ConstraintExpression Type=RelativeToParent, Property=Width, Factor=0.75}"
+                        BackgroundColor="Transparent"
+                        Command="{Binding StatsCommand}"/>
+                </RelativeLayout>
+            </Grid>
+
+        </StackLayout>
         
-        <!--<FlexLayout Direction="Column" BackgroundColor="{StaticResource Primary}">
-            --><!-- Header --><!--
-            <Button Text="Pick Image" Command="{Binding PickPhoto}" IsVisible="{Binding ImageLoaded, Converter={Helpers:InverseBoolConverter}}"/>
-            <Button Text="Take Photo" Command="{Binding TakePhoto}" IsVisible="{Binding ImageLoaded, Converter={Helpers:InverseBoolConverter}}"/>
-            <Button Text="Back" Command="{Binding ResetImage}" IsVisible="{Binding ImageLoaded}"/>
-            --><!-- Content -->
-            <!--<local:CustomSKCanvas x:Name="canvasView"
-                PaintSurface="OnCanvasViewPaintSurface"
-                    FlexLayout.Grow="1" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand"/>--><!--
-            <local:PinchToZoomContainer FlexLayout.Grow="1" IsVisible="{Binding ImageLoaded}" IsClippedToBounds="True">
-                <local:PinchToZoomContainer.Content>
-                    <local:BitmapCanvas x:Name="canvasView"
-                PaintSurface="OnCanvasViewPaintSurface"
-                Bitmap="{Binding BitmapProcessed}"/>
-                </local:PinchToZoomContainer.Content>
-            </local:PinchToZoomContainer>
-
-            --><!-- Footer --><!--
-            <StackLayout Margin="10" HeightRequest="30" Orientation="Horizontal" IsVisible="{Binding SliderNeeded}">
-                <Slider HorizontalOptions="FillAndExpand" HeightRequest="20" Minimum="0" Maximum="1" Value="{Binding SliderValue}" ValueChanged="Slider_ValueChanged"/>
-            </StackLayout>
-            <ScrollView Margin="10" Orientation="Horizontal" IsVisible="{Binding ImageLoaded}">
-                <StackLayout Orientation="Horizontal" HorizontalOptions="Center">
-                    <FlexLayout Direction="Column" HeightRequest="70">
-                        <ImageButton Source="icon_home.png"
-                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding RestoreImage}"/>
-                        <Label Text="Original" HeightRequest="20" HorizontalTextAlignment="Center"/>
-                    </FlexLayout>
-                    <FlexLayout Direction="Column" HeightRequest="70">
-                        <ImageButton Source="icon_add.png"
-                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Pasterize}"/>
-                        <Label Text="Pasterize" HeightRequest="20" HorizontalTextAlignment="Center"/>
-                    </FlexLayout>
-                    <FlexLayout Direction="Column" HeightRequest="70">
-                        <ImageButton Source="icon_add.png"
-                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Grayscale}"/>
-                        <Label Text="Grayscale" HeightRequest="20" HorizontalTextAlignment="Center"/>
-                    </FlexLayout>
-                    <FlexLayout Direction="Column" HeightRequest="70">
-                        <ImageButton Source="icon_add.png"
-                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Invert}"/>
-                        <Label Text="Invert" HeightRequest="20" HorizontalTextAlignment="Center"/>
-                    </FlexLayout>
-                    <FlexLayout Direction="Column" HeightRequest="70">
-                        <ImageButton Source="icon_add.png"
-                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding Binarize}"/>
-                        <Label Text="Binarize" HeightRequest="20" HorizontalTextAlignment="Center"/>
-                    </FlexLayout>
-                </StackLayout>
-            </ScrollView>
-        </FlexLayout>-->
     </ContentPage.Content>
 </ContentPage>
