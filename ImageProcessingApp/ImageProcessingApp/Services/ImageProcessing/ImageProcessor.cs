@@ -12,6 +12,183 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
     {
         private static object imageLock = new object();
 
+        struct seed
+        {
+            public static uint x = 1;
+            public static uint y = 123;
+            public static uint z = 456;
+            public static uint w = 768;
+        };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static uint RandomXorShift128()
+        {
+            uint t = seed.x ^ (seed.x << 11);
+            seed.x = seed.y;
+            seed.y = seed.z;
+            seed.z = seed.w;
+            seed.w = (seed.w ^ (seed.w >> 19)) ^ (t ^ (t >> 8));
+            return seed.w;
+        }
+
+        public static void ApplySaltPepperNoise(SKBitmap bitmap, double probability)
+        {
+            lock (imageLock)
+            {
+                unsafe
+                {
+                    uint* ptrOut = (uint*)bitmap.GetPixels().ToPointer();
+                    int pixelCount = bitmap.Width * bitmap.Height;
+                    uint probabilityInt = (uint)Math.Max(0, Math.Floor(probability * 127));
+                    for (int i = 0; i < pixelCount; i++)
+                    {
+                        uint rnd = RandomXorShift128() % 128;
+                        if (rnd <= probabilityInt)
+                        {
+                            byte value = (byte)(255 * (rnd % 2));
+                            *ptrOut++ = MakePixel(value, value, value, 255);
+                        }
+                        else
+                        {
+                            ptrOut++;
+                        }
+                    }
+                }
+            }
+        }
+
+        private static readonly int[] borderPixelMap =
+        {
+            0x1001b,
+            0x0001b,
+            0x0011b,
+            0x0010b,
+            0x0110b,
+            0x0100b,
+            0x1100b,
+            0x1000b
+        };
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static void GetPixels(uint pixel, out byte r, out byte g, out byte b)
+        {
+            r = (byte)(pixel & 255);
+            g = (byte)((pixel >> 8) & 255);
+            b = (byte)((pixel >> 16) & 255);
+        }
+        private static unsafe void LinearFilterStep(uint* ptrIn, uint* ptrOut, uint width, byte bordersInverted)
+        {
+            uint sumR = (*ptrIn & 255);
+            uint sumG = ((*ptrIn >> 8) & 255);
+            uint sumB = ((*ptrIn >> 16) & 255);
+            uint count = 1;
+            for (int i = 0; i < 8; i++)
+            {
+                int shiftH = (borderPixelMap[i] & 2) - (borderPixelMap[i] & 8);
+                int shiftV = (borderPixelMap[i] & 4) - (borderPixelMap[i] & 1);
+                if ((borderPixelMap[i] & bordersInverted) == borderPixelMap[i])
+                {
+                    count++;
+                    sumR += *(ptrIn + shiftH + shiftV * width) & 255;
+                    sumG += ((*(ptrIn + shiftH + shiftV * width) >> 8) & 255);
+                    sumB += ((*(ptrIn + shiftH + shiftV * width) >> 16) & 255);
+                }
+            }
+            sumR /= count;
+            sumG /= count;
+            sumB /= count;
+            *ptrOut = MakePixel((byte)sumR, (byte)sumG, (byte)sumB, 255);
+        }
+        public static void LinearFilter (SKBitmap bitmap, SKBitmap source)
+        {
+            lock (imageLock)
+            {
+                unsafe
+                {
+                    uint* ptrIn = (uint*)source.GetPixels().ToPointer();
+                    uint* ptrOut = (uint*)bitmap.GetPixels().ToPointer();
+                    int pixelCount = bitmap.Width * bitmap.Height;
+                    uint width = (uint)bitmap.Width;
+                    uint height = (uint)bitmap.Height;
+                    GetPixels(*ptrIn, out byte r, out byte g, out byte b);
+                    for (int i = 0; i < pixelCount; i++)
+                    {
+                        byte bordersInverted = 
+                            (byte)
+                            ((i >= width ? 0 : 1) +
+                            ((i % (width - 1) != 0 ? 0 : 1) << 1) +
+                            ((i < (height - 1) * width ? 0 : 1) << 2) +
+                            ((i % width != 0 ? 0 : 1) << 3));
+                        LinearFilterStep(ptrIn, ptrOut, width, bordersInverted);
+                        ptrIn++;
+                        ptrOut++;
+                    }
+                }
+            }
+        }
+
+        private static unsafe void MedianFilterStep(uint* ptrIn, uint* ptrOut, uint* ptrGray, uint width, byte bordersInverted)
+        {
+            uint sumR = (*ptrIn & 255);
+            uint sumG = ((*ptrIn >> 8) & 255);
+            uint sumB = ((*ptrIn >> 16) & 255);
+            uint count = 1;
+            byte[] values = new byte[8];
+            byte[] keys = new byte[8];
+            values[0] = (byte)(*ptrGray & 255);
+            keys[0] = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                int shiftH = (borderPixelMap[i] & 2) - (borderPixelMap[i] & 8);
+                int shiftV = (borderPixelMap[i] & 4) - (borderPixelMap[i] & 1);
+                if ((borderPixelMap[i] & bordersInverted) == borderPixelMap[i])
+                {
+                    values[count] = (byte)(*(ptrGray + shiftH + shiftV * width) & 255);
+                    keys[count] = (byte)count;
+                    count++;
+                    sumR += *(ptrIn + shiftH + shiftV * width) & 255;
+                    sumG += ((*(ptrIn + shiftH + shiftV * width) >> 8) & 255);
+                    sumB += ((*(ptrIn + shiftH + shiftV * width) >> 16) & 255);
+                }
+            }
+            Array.Sort(keys, values);
+            int index = keys[count / 2];
+            int shiftHNew = (borderPixelMap[index] & 2) - (borderPixelMap[index] & 8);
+            int shiftVNew = (borderPixelMap[index] & 4) - (borderPixelMap[index] & 1);
+            byte r = (byte)(*(ptrIn + shiftHNew + shiftVNew * width) & 255);
+            byte g = (byte)((*(ptrIn + shiftHNew + shiftVNew * width) >> 8) & 255);
+            byte b = (byte)((*(ptrIn + shiftHNew + shiftVNew * width) >> 16) & 255);
+            *ptrOut = MakePixel(r, g, b, 255);
+        }
+        public static void MedianFilter(SKBitmap bitmap, SKBitmap source, SKBitmap grayscale)
+        {
+            lock (imageLock)
+            {
+                unsafe
+                {
+                    uint* ptrIn = (uint*)source.GetPixels().ToPointer();
+                    uint* ptrGray = (uint*)grayscale.GetPixels().ToPointer();
+                    uint* ptrOut = (uint*)bitmap.GetPixels().ToPointer();
+                    int pixelCount = bitmap.Width * bitmap.Height;
+                    uint width = (uint)bitmap.Width;
+                    uint height = (uint)bitmap.Height;
+                    GetPixels(*ptrIn, out byte r, out byte g, out byte b);
+                    for (int i = 0; i < pixelCount; i++)
+                    {
+                        byte bordersInverted =
+                            (byte)
+                            ((i >= width ? 0 : 1) +
+                            ((i % (width - 1) != 0 ? 0 : 1) << 1) +
+                            ((i < (height - 1) * width ? 0 : 1) << 2) +
+                            ((i % width != 0 ? 0 : 1) << 3));
+                        MedianFilterStep(ptrIn, ptrOut, ptrGray, width, bordersInverted);
+                        ptrIn++;
+                        ptrOut++;
+                    }
+                }
+            }
+        }
+
         public static int[] GetRedChannelStats(SKBitmap bitmap)
         {
             lock (imageLock)
