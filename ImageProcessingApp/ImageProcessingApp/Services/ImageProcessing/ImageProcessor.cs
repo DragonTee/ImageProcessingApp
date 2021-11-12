@@ -110,7 +110,6 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
                     int pixelCount = bitmap.Width * bitmap.Height;
                     uint width = (uint)bitmap.Width;
                     uint height = (uint)bitmap.Height;
-                    HashSet<byte> set = new HashSet<byte>();
                     for (int i = 0; i < pixelCount; i++)
                     {
                         byte bordersInverted =
@@ -119,13 +118,10 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
                             ((((i + 1) % width) == 0 ? 0 : 1) << 1) +
                             ((i >= ((height - 1) * width) ? 0 : 1) << 2) +
                             (((i % width) == 0 ? 0 : 1) << 3));
-                        set.Add(bordersInverted);
                         LinearFilterStep(ptrIn, ptrOut, width, bordersInverted);
                         ptrIn++;
                         ptrOut++;
                     }
-                    foreach (var i in set)
-                        Console.WriteLine($"Byte set {i}");
                 }
             }
         }
