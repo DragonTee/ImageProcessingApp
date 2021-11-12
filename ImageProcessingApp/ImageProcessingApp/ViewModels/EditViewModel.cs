@@ -337,6 +337,46 @@ namespace ImageProcessingApp.Mobile.ViewModels
                     BitmapProcessed = bitmap;
                 }
             });
+            NoiseCommand = new Command(async () =>
+            {
+                lock (bitmapLock)
+                {
+                    SliderNeeded = true;
+                    ColorPickerNeeded = false;
+                    SecondcolorPickerNeeded = false;
+                    sliderChangedCommand = NoiseCommand;
+                    DisposeProcessedBitmap();
+                    SKBitmap bitmap = BitmapLoaded.Copy();
+                    ImageProcessor.ApplySaltPepperNoise(bitmap, sliderValue);
+                    BitmapProcessed = bitmap;
+                }
+            });
+            LinearFilterCommand = new Command(async () =>
+            {
+                lock (bitmapLock)
+                {
+                    SliderNeeded = false;
+                    ColorPickerNeeded = false;
+                    SecondcolorPickerNeeded = false;
+                    DisposeProcessedBitmap();
+                    SKBitmap bitmap = BitmapLoaded.Copy();
+                    ImageProcessor.LinearFilter(bitmap, BitmapLoaded);
+                    BitmapProcessed = bitmap;
+                }
+            });
+            MedianFilterCommand = new Command(async () =>
+            {
+                lock (bitmapLock)
+                {
+                    SliderNeeded = false;
+                    ColorPickerNeeded = false;
+                    SecondcolorPickerNeeded = false;
+                    DisposeProcessedBitmap();
+                    SKBitmap bitmap = BitmapLoaded.Copy();
+                    ImageProcessor.MedianFilter(bitmap, BitmapLoaded, bitmapGrayscaled);
+                    BitmapProcessed = bitmap;
+                }
+            });
             Invert = new Command(async () =>
             {
                 await Task.Run(() =>
@@ -393,7 +433,9 @@ namespace ImageProcessingApp.Mobile.ViewModels
         public ICommand Grayscale { get; }
         public ICommand Invert { get; }
         public ICommand Binarize { get; }
-        public ICommand BinarizeUpdate { get; }
+        public ICommand NoiseCommand { get; }
+        public ICommand LinearFilterCommand { get; }
+        public ICommand MedianFilterCommand { get; }        
 
         private void RestoreBitmapImage()
         {
