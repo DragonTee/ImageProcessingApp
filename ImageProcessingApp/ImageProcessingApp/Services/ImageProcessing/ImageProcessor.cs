@@ -59,14 +59,14 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
 
         private static readonly int[] borderPixelMap =
         {
-            0x1001b,
-            0x0001b,
-            0x0011b,
-            0x0010b,
-            0x0110b,
-            0x0100b,
-            0x1100b,
-            0x1000b
+            0b1001,
+            0b0001,
+            0b0011,
+            0b0010,
+            0b0110,
+            0b0100,
+            0b1100,
+            0b1000
         };
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -110,33 +110,43 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
                     int pixelCount = bitmap.Width * bitmap.Height;
                     uint width = (uint)bitmap.Width;
                     uint height = (uint)bitmap.Height;
-                    GetPixels(*ptrIn, out byte r, out byte g, out byte b);
+                    HashSet<byte> set = new HashSet<byte>();
                     for (int i = 0; i < pixelCount; i++)
                     {
-                        byte bordersInverted = 
+                        byte bordersInverted =
                             (byte)
-                            ((i >= width ? 0 : 1) +
-                            ((i % (width - 1) != 0 ? 0 : 1) << 1) +
-                            ((i < (height - 1) * width ? 0 : 1) << 2) +
-                            ((i % width != 0 ? 0 : 1) << 3));
+                            ((i < width ? 0 : 1) +
+                            ((((i + 1) % width) == 0 ? 0 : 1) << 1) +
+                            ((i >= ((height - 1) * width) ? 0 : 1) << 2) +
+                            (((i % width) == 0 ? 0 : 1) << 3));
+                        set.Add(bordersInverted);
                         LinearFilterStep(ptrIn, ptrOut, width, bordersInverted);
                         ptrIn++;
                         ptrOut++;
                     }
+                    foreach (var i in set)
+                        Console.WriteLine($"Byte set {i}");
                 }
             }
         }
 
+        class MedianFilterPixel
+        {
+            public int shiftH;
+            public int shiftV;
+            public MedianFilterPixel(int shiftH, int shiftV)
+            {
+                this.shiftH = shiftH;
+                this.shiftV = shiftV;
+            }
+        }
         private static unsafe void MedianFilterStep(uint* ptrIn, uint* ptrOut, uint* ptrGray, uint width, byte bordersInverted)
         {
-            uint sumR = (*ptrIn & 255);
-            uint sumG = ((*ptrIn >> 8) & 255);
-            uint sumB = ((*ptrIn >> 16) & 255);
             uint count = 1;
-            byte[] values = new byte[8];
-            byte[] keys = new byte[8];
+            byte[] values = new byte[9];
+            MedianFilterPixel[] keys = new MedianFilterPixel[9];
             values[0] = (byte)(*ptrGray & 255);
-            keys[0] = 0;
+            keys[0] = new MedianFilterPixel(0, 0);
             for (int i = 0; i < 8; i++)
             {
                 int shiftH = (borderPixelMap[i] & 2) - (borderPixelMap[i] & 8);
@@ -144,17 +154,14 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
                 if ((borderPixelMap[i] & bordersInverted) == borderPixelMap[i])
                 {
                     values[count] = (byte)(*(ptrGray + shiftH + shiftV * width) & 255);
-                    keys[count] = (byte)count;
+                    keys[count] = new MedianFilterPixel(shiftH, shiftV);
                     count++;
-                    sumR += *(ptrIn + shiftH + shiftV * width) & 255;
-                    sumG += ((*(ptrIn + shiftH + shiftV * width) >> 8) & 255);
-                    sumB += ((*(ptrIn + shiftH + shiftV * width) >> 16) & 255);
                 }
             }
-            Array.Sort(keys, values);
-            int index = keys[count / 2];
-            int shiftHNew = (borderPixelMap[index] & 2) - (borderPixelMap[index] & 8);
-            int shiftVNew = (borderPixelMap[index] & 4) - (borderPixelMap[index] & 1);
+            Array.Sort(values, keys, 0, (int)count);
+            var pixel = keys[count / 2];
+            int shiftHNew = pixel.shiftH;
+            int shiftVNew = pixel.shiftV;
             byte r = (byte)(*(ptrIn + shiftHNew + shiftVNew * width) & 255);
             byte g = (byte)((*(ptrIn + shiftHNew + shiftVNew * width) >> 8) & 255);
             byte b = (byte)((*(ptrIn + shiftHNew + shiftVNew * width) >> 16) & 255);
@@ -177,13 +184,14 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
                     {
                         byte bordersInverted =
                             (byte)
-                            ((i >= width ? 0 : 1) +
-                            ((i % (width - 1) != 0 ? 0 : 1) << 1) +
-                            ((i < (height - 1) * width ? 0 : 1) << 2) +
-                            ((i % width != 0 ? 0 : 1) << 3));
+                            ((i < width ? 0 : 1) +
+                            ((((i + 1) % width) == 0 ? 0 : 1) << 1) +
+                            ((i >= ((height - 1) * width) ? 0 : 1) << 2) +
+                            (((i % width) == 0 ? 0 : 1) << 3));
                         MedianFilterStep(ptrIn, ptrOut, ptrGray, width, bordersInverted);
                         ptrIn++;
                         ptrOut++;
+                        ptrGray++;
                     }
                 }
             }
