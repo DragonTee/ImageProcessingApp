@@ -153,6 +153,21 @@
                         BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding MedianFilterCommand}"/>
                             <Label TextColor="{StaticResource Primary}" Text="MedianFilter" HeightRequest="20" HorizontalTextAlignment="Center"/>
                         </FlexLayout>
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding KirschCommand}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="KirschEdges" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding LaplaceCommand}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="LaplaceEdges" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding RobertsCommand}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="RobertsEdges" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
                     </StackLayout>
                 </ScrollView>
                 <Grid Grid.Row="3" Grid.ColumnSpan="4" Grid.RowSpan="2" IsVisible="{Binding ShowingStats}" Margin="0,-100,0,0">

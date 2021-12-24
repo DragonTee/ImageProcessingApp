@@ -377,6 +377,45 @@ namespace ImageProcessingApp.Mobile.ViewModels
                     BitmapProcessed = bitmap;
                 }
             });
+            RobertsCommand = new Command(async () =>
+            {
+                lock (bitmapLock)
+                {
+                    SliderNeeded = false;
+                    ColorPickerNeeded = false;
+                    SecondcolorPickerNeeded = false;
+                    DisposeProcessedBitmap();
+                    SKBitmap bitmap = BitmapLoaded.Copy();
+                    ImageProcessor.Roberts(bitmap, bitmapGrayscaled);
+                    BitmapProcessed = bitmap;
+                }
+            });
+            LaplaceCommand = new Command(async () =>
+            {
+                lock (bitmapLock)
+                {
+                    SliderNeeded = false;
+                    ColorPickerNeeded = false;
+                    SecondcolorPickerNeeded = false;
+                    DisposeProcessedBitmap();
+                    SKBitmap bitmap = BitmapLoaded.Copy();
+                    ImageProcessor.Laplace(bitmap, bitmapGrayscaled);
+                    BitmapProcessed = bitmap;
+                }
+            });
+            KirschCommand = new Command(async () =>
+            {
+                lock (bitmapLock)
+                {
+                    SliderNeeded = false;
+                    ColorPickerNeeded = false;
+                    SecondcolorPickerNeeded = false;
+                    DisposeProcessedBitmap();
+                    SKBitmap bitmap = BitmapLoaded.Copy();
+                    ImageProcessor.Kirsch(bitmap, bitmapGrayscaled);
+                    BitmapProcessed = bitmap;
+                }
+            });
             Invert = new Command(async () =>
             {
                 await Task.Run(() =>
@@ -418,7 +457,9 @@ namespace ImageProcessingApp.Mobile.ViewModels
             });
         }
 
-
+        public ICommand RobertsCommand { get; }
+        public ICommand LaplaceCommand { get; }
+        public ICommand KirschCommand { get; }
         public ICommand LatestCommand { get; }
         public ICommand StatsCommand { get; }
         public ICommand EditCommand { get; }

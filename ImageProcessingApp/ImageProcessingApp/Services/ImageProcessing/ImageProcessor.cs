@@ -136,6 +136,205 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
                 this.shiftV = shiftV;
             }
         }
+        private static unsafe void RobertsStep(uint* ptrGray, uint* ptrOut, uint width, byte bordersInverted)
+        {
+            byte[] values = new byte[9];
+            values[0] = (byte)(*ptrGray & 255);
+            var result = 0;
+            int[] f = { 0, 0, 0 , 0};
+            for (int i = 3; i < 6; i++)
+            {
+                int shiftH = (borderPixelMap[i] & 2) - (borderPixelMap[i] & 8);
+                int shiftV = (borderPixelMap[i] & 4) - (borderPixelMap[i] & 1);
+                if ((borderPixelMap[i] & bordersInverted) == borderPixelMap[i])
+                {
+                    f[i - 3] = (int)(*(ptrGray + shiftH + shiftV * width) & 255);
+                }
+            }
+            f[3] = (int)(*ptrGray & 255);
+            result = (int)Math.Round(Math.Sqrt((f[3] - f[1]) * (f[3] - f[1]) + (f[0] - f[2]) * (f[0] - f[2])));
+            result = Math.Min(Math.Max(result, 0), 255);
+            byte res = (byte)(result);
+            *ptrOut = MakePixel(res, res, res, 255);
+        }
+        public static void Roberts(SKBitmap bitmap, SKBitmap grayscale)
+        {
+            lock (imageLock)
+            {
+                unsafe
+                {
+                    uint* ptrGray = (uint*)grayscale.GetPixels().ToPointer();
+                    uint* ptrOut = (uint*)bitmap.GetPixels().ToPointer();
+                    int pixelCount = bitmap.Width * bitmap.Height;
+                    uint width = (uint)bitmap.Width;
+                    uint height = (uint)bitmap.Height;
+                    var threads = new List<Task>();
+                    var step = (int)(width * 50);
+                    for (int i = 0; i < pixelCount; i += step)
+                    {
+                        var localPtrOut = ptrOut;
+                        var localPtrGray = ptrGray;
+                        var localCount = Math.Min(pixelCount - i, step);
+                        var newTask = Task.Factory.StartNew(() =>
+                        {
+                            for (int j = 0; j < localCount; j++)
+                            {
+
+                                byte bordersInverted =
+                                    (byte)
+                                    ((i < width ? 0 : 1) +
+                                    ((((i + 1) % width) == 0 ? 0 : 1) << 1) +
+                                    ((i >= ((height - 1) * width) ? 0 : 1) << 2) +
+                                    (((i % width) == 0 ? 0 : 1) << 3));
+                                RobertsStep(localPtrGray, localPtrOut, width, bordersInverted);
+                                localPtrOut++;
+                                localPtrGray++;
+                            }
+                        });
+                        threads.Add(newTask);
+                        ptrOut += step;
+                        ptrGray += step;
+                    }
+                    Task.WaitAll(threads.ToArray());
+                }
+            }
+        }
+        private static readonly int[] LaplaceCoef = { -1, -2, -1, -2, -1, -2, -1, -2 };
+        private static unsafe void LaplaceStep(uint* ptrGray, uint* ptrOut, uint width, byte bordersInverted)
+        {
+            byte[] values = new byte[9];
+            values[0] = (byte)(*ptrGray & 255);
+            var result = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                int shiftH = (borderPixelMap[i] & 2) - (borderPixelMap[i] & 8);
+                int shiftV = (borderPixelMap[i] & 4) - (borderPixelMap[i] & 1);
+                if ((borderPixelMap[i] & bordersInverted) == borderPixelMap[i])
+                {
+                    result += (int)(*(ptrGray + shiftH + shiftV * width) & 255) * LaplaceCoef[i];
+                }
+            }
+            result += (int)(*ptrGray & 255) * 12;
+            result /= 12;
+            byte res = (byte)(result);
+            *ptrOut = MakePixel(res, res, res, 255);
+        }
+        public static void Laplace(SKBitmap bitmap, SKBitmap grayscale)
+        {
+            lock (imageLock)
+            {
+                unsafe
+                {
+                    uint* ptrGray = (uint*)grayscale.GetPixels().ToPointer();
+                    uint* ptrOut = (uint*)bitmap.GetPixels().ToPointer();
+                    int pixelCount = bitmap.Width * bitmap.Height;
+                    uint width = (uint)bitmap.Width;
+                    uint height = (uint)bitmap.Height;
+                    var threads = new List<Task>();
+                    var step = (int)(width * 50);
+                    for (int i = 0; i < pixelCount; i += step)
+                    {
+                        var localPtrOut = ptrOut;
+                        var localPtrGray = ptrGray;
+                        var localCount = Math.Min(pixelCount - i, step);
+                        var newTask = Task.Factory.StartNew(() =>
+                        {
+                            for (int j = 0; j < localCount; j++)
+                            {
+
+                                byte bordersInverted =
+                                    (byte)
+                                    ((i < width ? 0 : 1) +
+                                    ((((i + 1) % width) == 0 ? 0 : 1) << 1) +
+                                    ((i >= ((height - 1) * width) ? 0 : 1) << 2) +
+                                    (((i % width) == 0 ? 0 : 1) << 3));
+                                LaplaceStep(localPtrGray, localPtrOut, width, bordersInverted);
+                                localPtrOut++;
+                                localPtrGray++;
+                            }
+                        });
+                        threads.Add(newTask);
+                        ptrOut += step;
+                        ptrGray += step;
+                    }
+                    Task.WaitAll(threads.ToArray());
+                }
+            }
+        }
+        private static unsafe void KirschStep(uint* ptrGray, uint* ptrOut, uint width, byte bordersInverted)
+        {
+            byte[] values = new byte[9];
+            values[0] = (byte)(*ptrGray & 255);
+            var result = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                var s = 0;
+                for (int j = 0; j < 3; j++)
+                {
+                    int shiftH = (borderPixelMap[(i + j) % 8] & 2) - (borderPixelMap[(i + j) % 8] & 8);
+                    int shiftV = (borderPixelMap[(i + j) % 8] & 4) - (borderPixelMap[(i + j) % 8] & 1);
+                    if ((borderPixelMap[(i + j) % 8] & bordersInverted) == borderPixelMap[(i + j) % 8])
+                    {
+                        s += (int)(*(ptrGray + shiftH + shiftV * width) & 255);
+                    }
+                }
+                var t = 0;
+                for (int j = 3; j < 8; j++)
+                {
+                    int shiftH = (borderPixelMap[(i + j) % 8] & 2) - (borderPixelMap[(i + j) % 8] & 8);
+                    int shiftV = (borderPixelMap[(i + j) % 8] & 4) - (borderPixelMap[(i + j) % 8] & 1);
+                    if ((borderPixelMap[(i + j) % 8] & bordersInverted) == borderPixelMap[(i + j) % 8])
+                    {
+                        t += (int)(*(ptrGray + shiftH + shiftV * width) & 255);
+                    }
+                }
+                result = Math.Max(result, Math.Min(Math.Max(Math.Abs((5 * s) - (3 * t)) / 15, 0), 255));
+            }
+            byte res = (byte)(result);
+            *ptrOut = MakePixel(res, res, res, 255);
+        }
+        public static void Kirsch(SKBitmap bitmap, SKBitmap grayscale)
+        {
+            lock (imageLock)
+            {
+                unsafe
+                {
+                    uint* ptrGray = (uint*)grayscale.GetPixels().ToPointer();
+                    uint* ptrOut = (uint*)bitmap.GetPixels().ToPointer();
+                    int pixelCount = bitmap.Width * bitmap.Height;
+                    uint width = (uint)bitmap.Width;
+                    uint height = (uint)bitmap.Height;
+                    var threads = new List<Task>();
+                    var step = (int)(width * 50);
+                    for (int i = 0; i < pixelCount; i += step)
+                    {
+                        var localPtrOut = ptrOut;
+                        var localPtrGray = ptrGray;
+                        var localCount = Math.Min(pixelCount - i, step);
+                        var newTask = Task.Factory.StartNew(() =>
+                        {
+                            for (int j = 0; j < localCount; j++)
+                            {
+
+                                byte bordersInverted =
+                                    (byte)
+                                    ((i < width ? 0 : 1) +
+                                    ((((i + 1) % width) == 0 ? 0 : 1) << 1) +
+                                    ((i >= ((height - 1) * width) ? 0 : 1) << 2) +
+                                    (((i % width) == 0 ? 0 : 1) << 3));
+                                KirschStep(localPtrGray, localPtrOut, width, bordersInverted);
+                                localPtrOut++;
+                                localPtrGray++;
+                            }
+                        });
+                        threads.Add(newTask);
+                        ptrOut += step;
+                        ptrGray += step;
+                    }
+                    Task.WaitAll(threads.ToArray());
+                }
+            }
+        }
         private static unsafe void MedianFilterStep(uint* ptrIn, uint* ptrOut, uint* ptrGray, uint width, byte bordersInverted)
         {
             uint count = 1;
@@ -176,19 +375,37 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
                     uint width = (uint)bitmap.Width;
                     uint height = (uint)bitmap.Height;
                     GetPixels(*ptrIn, out byte r, out byte g, out byte b);
-                    for (int i = 0; i < pixelCount; i++)
+                    var threads = new List<Task>();
+                    var step = (int)(width * 50);
+                    for (int i = 0; i < pixelCount; i += step)
                     {
-                        byte bordersInverted =
-                            (byte)
-                            ((i < width ? 0 : 1) +
-                            ((((i + 1) % width) == 0 ? 0 : 1) << 1) +
-                            ((i >= ((height - 1) * width) ? 0 : 1) << 2) +
-                            (((i % width) == 0 ? 0 : 1) << 3));
-                        MedianFilterStep(ptrIn, ptrOut, ptrGray, width, bordersInverted);
-                        ptrIn++;
-                        ptrOut++;
-                        ptrGray++;
+                        var localPtrIn = ptrIn;
+                        var localPtrOut = ptrOut;
+                        var localPtrGray = ptrGray;
+                        var localCount = Math.Min(pixelCount - i, step);
+                        var newTask = Task.Factory.StartNew(() =>
+                        {
+                            for (int j = 0; j < localCount; j++)
+                            {
+
+                                byte bordersInverted =
+                                    (byte)
+                                    ((i < width ? 0 : 1) +
+                                    ((((i + 1) % width) == 0 ? 0 : 1) << 1) +
+                                    ((i >= ((height - 1) * width) ? 0 : 1) << 2) +
+                                    (((i % width) == 0 ? 0 : 1) << 3));
+                                MedianFilterStep(localPtrIn, localPtrOut, localPtrGray, width, bordersInverted);
+                                localPtrIn++;
+                                localPtrOut++;
+                                localPtrGray++;
+                            }
+                        });
+                        threads.Add(newTask);
+                        ptrIn+=step;
+                        ptrOut+=step;
+                        ptrGray+=step;
                     }
+                    Task.WaitAll(threads.ToArray());
                 }
             }
         }
