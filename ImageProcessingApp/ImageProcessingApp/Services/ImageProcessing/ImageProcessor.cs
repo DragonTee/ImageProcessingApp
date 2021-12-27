@@ -136,10 +136,208 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
                 this.shiftV = shiftV;
             }
         }
+        private static unsafe void StatEdgesStep(uint* ptrGray, uint* ptrOut, uint width, byte bordersInverted)
+        {
+            var sum = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                int shiftH = (borderPixelMap[i] & 2) - (borderPixelMap[i] & 8);
+                int shiftV = (borderPixelMap[i] & 4) - (borderPixelMap[i] & 1);
+                if ((borderPixelMap[i] & bordersInverted) == borderPixelMap[i] && i % 2 == 1)
+                {
+                    sum += (int)(*(ptrGray + shiftH + shiftV * width) & 255);
+                }
+            }
+            var current = (int)(*ptrGray & 255);
+            sum += current;
+            var average = sum / 9d;
+            var result = 0d;
+            for (int i = 0; i < 8; i++)
+            {
+                int shiftH = (borderPixelMap[i] & 2) - (borderPixelMap[i] & 8);
+                int shiftV = (borderPixelMap[i] & 4) - (borderPixelMap[i] & 1);
+                if ((borderPixelMap[i] & bordersInverted) == borderPixelMap[i] && i % 2 == 1)
+                {
+                    var newElem = (int)(*(ptrGray + shiftH + shiftV * width) & 255);
+                    result += (newElem - average) * (newElem - average);
+                }
+            }
+            result += (current - average) * (current - average);
+            result /= 9;
+            int resultInt = (int)Math.Round(Math.Sqrt(result) * current / 50);
+            resultInt = Math.Min(Math.Max(resultInt, 0), 255);
+            byte res = (byte)(resultInt);
+            *ptrOut = MakePixel(res, res, res, 255);
+        }
+        public static void StatEdges(SKBitmap bitmap, SKBitmap grayscale)
+        {
+            lock (imageLock)
+            {
+                unsafe
+                {
+                    uint* ptrGray = (uint*)grayscale.GetPixels().ToPointer();
+                    uint* ptrOut = (uint*)bitmap.GetPixels().ToPointer();
+                    int pixelCount = bitmap.Width * bitmap.Height;
+                    uint width = (uint)bitmap.Width;
+                    uint height = (uint)bitmap.Height;
+                    var threads = new List<Task>();
+                    var step = (int)(width * 50);
+                    for (int i = 0; i < pixelCount; i += step)
+                    {
+                        var localPtrOut = ptrOut;
+                        var localPtrGray = ptrGray;
+                        var localCount = Math.Min(pixelCount - i, step);
+                        var newI = i;
+                        var newTask = Task.Factory.StartNew(() =>
+                        {
+                            for (int j = 0; j < localCount; j++)
+                            {
+
+                                byte bordersInverted =
+                                    (byte)
+                                    (((newI + j) < width ? 0 : 1) +
+                                    ((((newI + j + 1) % width) == 0 ? 0 : 1) << 1) +
+                                    (((newI + j) >= ((height - 1) * width) ? 0 : 1) << 2) +
+                                    ((((newI + j) % width) == 0 ? 0 : 1) << 3));
+                                StatEdgesStep(localPtrGray, localPtrOut, width, bordersInverted);
+                                localPtrOut++;
+                                localPtrGray++;
+                            }
+                        });
+                        threads.Add(newTask);
+                        ptrOut += step;
+                        ptrGray += step;
+                    }
+                    Task.WaitAll(threads.ToArray());
+                }
+            }
+        }
+        private static unsafe void WallaceStep(uint* ptrGray, uint* ptrOut, uint width, byte bordersInverted)
+        {
+            var result = 1d;
+            var f = (int)(*ptrGray & 255);
+            for (int i = 0; i < 8; i++)
+            {
+                int shiftH = (borderPixelMap[i] & 2) - (borderPixelMap[i] & 8);
+                int shiftV = (borderPixelMap[i] & 4) - (borderPixelMap[i] & 1);
+                if ((borderPixelMap[i] & bordersInverted) == borderPixelMap[i] && i % 2 == 1)
+                {
+                    result = result * f / (int)(*(ptrGray + shiftH + shiftV * width) & 255);
+                }
+            }
+            result = (int)Math.Round(Math.Log(result) / 4 * 400);
+            result = Math.Min(Math.Max(result, 0), 255);
+            byte res = (byte)(result);
+            *ptrOut = MakePixel(res, res, res, 255);
+        }
+        public static void Wallace(SKBitmap bitmap, SKBitmap grayscale)
+        {
+            lock (imageLock)
+            {
+                unsafe
+                {
+                    uint* ptrGray = (uint*)grayscale.GetPixels().ToPointer();
+                    uint* ptrOut = (uint*)bitmap.GetPixels().ToPointer();
+                    int pixelCount = bitmap.Width * bitmap.Height;
+                    uint width = (uint)bitmap.Width;
+                    uint height = (uint)bitmap.Height;
+                    var threads = new List<Task>();
+                    var step = (int)(width * 50);
+                    for (int i = 0; i < pixelCount; i += step)
+                    {
+                        var localPtrOut = ptrOut;
+                        var localPtrGray = ptrGray;
+                        var localCount = Math.Min(pixelCount - i, step);
+                        var newI = i;
+                        var newTask = Task.Factory.StartNew(() =>
+                        {
+                            for (int j = 0; j < localCount; j++)
+                            {
+
+                                byte bordersInverted =
+                                    (byte)
+                                    (((newI + j) < width ? 0 : 1) +
+                                    ((((newI + j + 1) % width) == 0 ? 0 : 1) << 1) +
+                                    (((newI + j) >= ((height - 1) * width) ? 0 : 1) << 2) +
+                                    ((((newI + j) % width) == 0 ? 0 : 1) << 3));
+                                WallaceStep(localPtrGray, localPtrOut, width, bordersInverted);
+                                localPtrOut++;
+                                localPtrGray++;
+                            }
+                        });
+                        threads.Add(newTask);
+                        ptrOut += step;
+                        ptrGray += step;
+                    }
+                    Task.WaitAll(threads.ToArray());
+                }
+            }
+        }
+        private static unsafe void SobelStep(uint* ptrGray, uint* ptrOut, uint width, byte bordersInverted)
+        {
+            var result = 0;
+            int[] f = { 0, 0, 0, 0, 0, 0, 0, 0};
+            for (int i = 0; i < 8; i++)
+            {
+                int shiftH = (borderPixelMap[i] & 2) - (borderPixelMap[i] & 8);
+                int shiftV = (borderPixelMap[i] & 4) - (borderPixelMap[i] & 1);
+                if ((borderPixelMap[i] & bordersInverted) == borderPixelMap[i])
+                {
+                    f[i] = (int)(*(ptrGray + shiftH + shiftV * width) & 255);
+                }
+            }
+            var x = (f[0] + 2 * f[1] + f[2]) - (f[6] + 2 * f[5] + f[4]);
+            var y = (f[0] + 2 * f[7] + f[6]) - (f[2] + 2 * f[3] + f[4]);
+            result = (int)Math.Round(Math.Sqrt(x * x + y * y));
+            result = Math.Min(Math.Max(result, 0), 255);
+            byte res = (byte)(result);
+            *ptrOut = MakePixel(res, res, res, 255);
+        }
+        public static void Sobel(SKBitmap bitmap, SKBitmap grayscale)
+        {
+            lock (imageLock)
+            {
+                unsafe
+                {
+                    uint* ptrGray = (uint*)grayscale.GetPixels().ToPointer();
+                    uint* ptrOut = (uint*)bitmap.GetPixels().ToPointer();
+                    int pixelCount = bitmap.Width * bitmap.Height;
+                    uint width = (uint)bitmap.Width;
+                    uint height = (uint)bitmap.Height;
+                    var threads = new List<Task>();
+                    var step = (int)(width * 50);
+                    for (int i = 0; i < pixelCount; i += step)
+                    {
+                        var localPtrOut = ptrOut;
+                        var localPtrGray = ptrGray;
+                        var localCount = Math.Min(pixelCount - i, step);
+                        var newI = i;
+                        var newTask = Task.Factory.StartNew(() =>
+                        {
+                            for (int j = 0; j < localCount; j++)
+                            {
+
+                                byte bordersInverted =
+                                    (byte)
+                                    (((newI + j) < width ? 0 : 1) +
+                                    ((((newI + j + 1) % width) == 0 ? 0 : 1) << 1) +
+                                    (((newI + j) >= ((height - 1) * width) ? 0 : 1) << 2) +
+                                    ((((newI + j) % width) == 0 ? 0 : 1) << 3));
+                                SobelStep(localPtrGray, localPtrOut, width, bordersInverted);
+                                localPtrOut++;
+                                localPtrGray++;
+                            }
+                        });
+                        threads.Add(newTask);
+                        ptrOut += step;
+                        ptrGray += step;
+                    }
+                    Task.WaitAll(threads.ToArray());
+                }
+            }
+        }
         private static unsafe void RobertsStep(uint* ptrGray, uint* ptrOut, uint width, byte bordersInverted)
         {
-            byte[] values = new byte[9];
-            values[0] = (byte)(*ptrGray & 255);
             var result = 0;
             int[] f = { 0, 0, 0 , 0};
             for (int i = 3; i < 6; i++)
@@ -175,6 +373,7 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
                         var localPtrOut = ptrOut;
                         var localPtrGray = ptrGray;
                         var localCount = Math.Min(pixelCount - i, step);
+                        var newI = i;
                         var newTask = Task.Factory.StartNew(() =>
                         {
                             for (int j = 0; j < localCount; j++)
@@ -182,10 +381,10 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
 
                                 byte bordersInverted =
                                     (byte)
-                                    ((i < width ? 0 : 1) +
-                                    ((((i + 1) % width) == 0 ? 0 : 1) << 1) +
-                                    ((i >= ((height - 1) * width) ? 0 : 1) << 2) +
-                                    (((i % width) == 0 ? 0 : 1) << 3));
+                                    (((newI + j) < width ? 0 : 1) +
+                                    ((((newI + j + 1) % width) == 0 ? 0 : 1) << 1) +
+                                    (((newI + j) >= ((height - 1) * width) ? 0 : 1) << 2) +
+                                    ((((newI + j) % width) == 0 ? 0 : 1) << 3));
                                 RobertsStep(localPtrGray, localPtrOut, width, bordersInverted);
                                 localPtrOut++;
                                 localPtrGray++;
@@ -202,8 +401,6 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
         private static readonly int[] LaplaceCoef = { -1, -2, -1, -2, -1, -2, -1, -2 };
         private static unsafe void LaplaceStep(uint* ptrGray, uint* ptrOut, uint width, byte bordersInverted)
         {
-            byte[] values = new byte[9];
-            values[0] = (byte)(*ptrGray & 255);
             var result = 0;
             for (int i = 0; i < 8; i++)
             {
@@ -216,6 +413,7 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
             }
             result += (int)(*ptrGray & 255) * 12;
             result /= 12;
+            result = Math.Max(0, result);
             byte res = (byte)(result);
             *ptrOut = MakePixel(res, res, res, 255);
         }
@@ -237,6 +435,7 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
                         var localPtrOut = ptrOut;
                         var localPtrGray = ptrGray;
                         var localCount = Math.Min(pixelCount - i, step);
+                        var newI = i;
                         var newTask = Task.Factory.StartNew(() =>
                         {
                             for (int j = 0; j < localCount; j++)
@@ -244,10 +443,10 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
 
                                 byte bordersInverted =
                                     (byte)
-                                    ((i < width ? 0 : 1) +
-                                    ((((i + 1) % width) == 0 ? 0 : 1) << 1) +
-                                    ((i >= ((height - 1) * width) ? 0 : 1) << 2) +
-                                    (((i % width) == 0 ? 0 : 1) << 3));
+                                    (((newI + j) < width ? 0 : 1) +
+                                    ((((newI + j + 1) % width) == 0 ? 0 : 1) << 1) +
+                                    (((newI + j) >= ((height - 1) * width) ? 0 : 1) << 2) +
+                                    ((((newI + j) % width) == 0 ? 0 : 1) << 3));
                                 LaplaceStep(localPtrGray, localPtrOut, width, bordersInverted);
                                 localPtrOut++;
                                 localPtrGray++;
@@ -311,6 +510,7 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
                         var localPtrOut = ptrOut;
                         var localPtrGray = ptrGray;
                         var localCount = Math.Min(pixelCount - i, step);
+                        var newI = i;
                         var newTask = Task.Factory.StartNew(() =>
                         {
                             for (int j = 0; j < localCount; j++)
@@ -318,10 +518,10 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
 
                                 byte bordersInverted =
                                     (byte)
-                                    ((i < width ? 0 : 1) +
-                                    ((((i + 1) % width) == 0 ? 0 : 1) << 1) +
-                                    ((i >= ((height - 1) * width) ? 0 : 1) << 2) +
-                                    (((i % width) == 0 ? 0 : 1) << 3));
+                                    (((newI + j) < width ? 0 : 1) +
+                                    ((((newI + j + 1) % width) == 0 ? 0 : 1) << 1) +
+                                    (((newI + j) >= ((height - 1) * width) ? 0 : 1) << 2) +
+                                    ((((newI + j) % width) == 0 ? 0 : 1) << 3));
                                 KirschStep(localPtrGray, localPtrOut, width, bordersInverted);
                                 localPtrOut++;
                                 localPtrGray++;
@@ -383,6 +583,7 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
                         var localPtrOut = ptrOut;
                         var localPtrGray = ptrGray;
                         var localCount = Math.Min(pixelCount - i, step);
+                        var newI = i;
                         var newTask = Task.Factory.StartNew(() =>
                         {
                             for (int j = 0; j < localCount; j++)
@@ -390,10 +591,10 @@ namespace ImageProcessingApp.Mobile.Services.ImageProcessing
 
                                 byte bordersInverted =
                                     (byte)
-                                    ((i < width ? 0 : 1) +
-                                    ((((i + 1) % width) == 0 ? 0 : 1) << 1) +
-                                    ((i >= ((height - 1) * width) ? 0 : 1) << 2) +
-                                    (((i % width) == 0 ? 0 : 1) << 3));
+                                    (((newI + j) < width ? 0 : 1) +
+                                    ((((newI + j + 1) % width) == 0 ? 0 : 1) << 1) +
+                                    (((newI + j) >= ((height - 1) * width) ? 0 : 1) << 2) +
+                                    ((((newI + j) % width) == 0 ? 0 : 1) << 3));
                                 MedianFilterStep(localPtrIn, localPtrOut, localPtrGray, width, bordersInverted);
                                 localPtrIn++;
                                 localPtrOut++;

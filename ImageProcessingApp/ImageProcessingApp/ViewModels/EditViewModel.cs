@@ -377,6 +377,45 @@ namespace ImageProcessingApp.Mobile.ViewModels
                     BitmapProcessed = bitmap;
                 }
             });
+            StatEdgesCommand = new Command(async () =>
+            {
+                lock (bitmapLock)
+                {
+                    SliderNeeded = false;
+                    ColorPickerNeeded = false;
+                    SecondcolorPickerNeeded = false;
+                    DisposeProcessedBitmap();
+                    SKBitmap bitmap = BitmapLoaded.Copy();
+                    ImageProcessor.StatEdges(bitmap, bitmapGrayscaled);
+                    BitmapProcessed = bitmap;
+                }
+            });
+            WallaceCommand = new Command(async () =>
+            {
+                lock (bitmapLock)
+                {
+                    SliderNeeded = false;
+                    ColorPickerNeeded = false;
+                    SecondcolorPickerNeeded = false;
+                    DisposeProcessedBitmap();
+                    SKBitmap bitmap = BitmapLoaded.Copy();
+                    ImageProcessor.Wallace(bitmap, bitmapGrayscaled);
+                    BitmapProcessed = bitmap;
+                }
+            });
+            SobelCommand = new Command(async () =>
+            {
+                lock (bitmapLock)
+                {
+                    SliderNeeded = false;
+                    ColorPickerNeeded = false;
+                    SecondcolorPickerNeeded = false;
+                    DisposeProcessedBitmap();
+                    SKBitmap bitmap = BitmapLoaded.Copy();
+                    ImageProcessor.Sobel(bitmap, bitmapGrayscaled);
+                    BitmapProcessed = bitmap;
+                }
+            });
             RobertsCommand = new Command(async () =>
             {
                 lock (bitmapLock)
@@ -457,6 +496,9 @@ namespace ImageProcessingApp.Mobile.ViewModels
             });
         }
 
+        public ICommand StatEdgesCommand { get; }
+        public ICommand WallaceCommand { get; }
+        public ICommand SobelCommand { get; }
         public ICommand RobertsCommand { get; }
         public ICommand LaplaceCommand { get; }
         public ICommand KirschCommand { get; }

@@ -168,6 +168,21 @@
                         BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding RobertsCommand}"/>
                             <Label TextColor="{StaticResource Primary}" Text="RobertsEdges" HeightRequest="20" HorizontalTextAlignment="Center"/>
                         </FlexLayout>
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding SobelCommand}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="SobelEdges" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding WallaceCommand}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="WallaceEdges" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
+                        <FlexLayout Direction="Column" HeightRequest="70">
+                            <ImageButton Source="icon_add.png"
+                        BackgroundColor="Transparent" VerticalOptions="Center" HeightRequest="50" Command="{Binding StatEdgesCommand}"/>
+                            <Label TextColor="{StaticResource Primary}" Text="StatEdges" HeightRequest="20" HorizontalTextAlignment="Center"/>
+                        </FlexLayout>
                     </StackLayout>
                 </ScrollView>
                 <Grid Grid.Row="3" Grid.ColumnSpan="4" Grid.RowSpan="2" IsVisible="{Binding ShowingStats}" Margin="0,-100,0,0">
